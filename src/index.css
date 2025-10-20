@@ -1,3 +1,4 @@
+/*
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -10,4 +11,43 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+*/
+html, body, #root {
+  height: 100%;
+  min-height: 100vh;
+  width: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+  background: #fff;
+}
+
+/* Por defecto: móvil */
+body {
+  font-size: 15px;
+}
+#root {
+  padding: 0 4px;
+}
+
+@media (min-width: 601px) and (max-width: 1023px) {
+  body {
+    font-size: 17px;
+  }
+  #root {
+    padding: 0 18px;
+  }
+}
+@media (min-width: 1024px) {
+  body {
+    font-size: 18px;
+  }
+  #root {
+    padding: 0 32px;
+  }
 }

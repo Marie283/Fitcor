@@ -1,70 +1,218 @@
-# Getting Started with Create React App
+# 🏋️ GymApp - Aplicación de Gimnasio
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Una aplicación completa de gimnasio tipo Basic Fit/Synergy Gym con frontend en React y backend en Node.js/Express.
 
-## Available Scripts
+## 🚀 Características
 
-In the project directory, you can run:
+- ✅ **Frontend React** con navegación por rutas
+- ✅ **Backend Node.js/Express** con autenticación JWT
+- ✅ **Base de datos MongoDB Atlas**
+- ✅ **Diseño responsive** para móvil, tablet y desktop
+- ✅ **PWA** (Progressive Web App)
+- ✅ **Lazy loading** para mejor rendimiento
+- ✅ **Modales y toasts** en lugar de alerts
+- ✅ **PropTypes** para validación de props
+- ✅ **Logging inteligente** (solo en desarrollo)
 
-### `npm start`
+## 📋 Requisitos Previos
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Node.js 18.x o superior
+- npm o yarn
+- MongoDB Atlas (gratuito)
+- Cuenta en Hostinger o cualquier sitio que te de hosting y dominio (para producción)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠️ Instalación y Configuración
 
-### `npm test`
+### 1. Clonar el repositorio
+```bash
+git clone <tu-repositorio>
+cd gymapp
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 2. Instalar dependencias
+```bash
+# Frontend
+npm install
 
-### `npm run build`
+# Backend
+cd backend
+npm install
+cd ..
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 3. Configurar variables de entorno
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+**Frontend** (crear `.env` en la raíz):
+```env
+REACT_APP_API_URL=https://www.fitcor.fun
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+**Backend** (crear `.env` en `backend/`):
+```env
+MONGO_URI=mongodb+srv://usuario:contraseña@fitcor.x6ze1ab.mongodb.net/gymapp?retryWrites=true&w=majority
+NODE_ENV=development
+JWT_SECRET=tu_jwt_secret_super_seguro
+FRONTEND_URL=http://localhost:3000
+```
 
-### `npm run eject`
+### 4. Configurar MongoDB Atlas
+- Crear cluster en [MongoDB Atlas](https://cloud.mongodb.com)
+- Configurar Network Access (agregar `0.0.0.0/0` para desarrollo)
+- Crear usuario de base de datos
+- Obtener cadena de conexión
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🚀 Comandos Disponibles
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Desarrollo
+```bash
+# Iniciar ambos servicios automáticamente
+npm run dev
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+# Solo frontend
+npm run frontend
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+# Solo backend
+npm run backend
 
-## Learn More
+# Backend con nodemon (auto-reload)
+npm run backend:dev
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Producción
+```bash
+# Crear build de producción
+npm run build
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Preparar archivos para Hostinger
+npm run deploy:prepare
+```
 
-### Code Splitting
+### Testing
+```bash
+# Ejecutar tests
+npm test
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+# Build con análisis
+npm run build
+```
 
-### Analyzing the Bundle Size
+## 🌐 URLs de Desarrollo
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:5000
+- **API Docs**: http://localhost:5000/api
 
-### Making a Progressive Web App
+## 📱 Funcionalidades
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Frontend
+- 🏠 **Inicio**: Dashboard principal con estadísticas
+- 👤 **Perfil**: Gestión de usuario y configuración
+- 💪 **Entrenamiento**: Rutinas y ejercicios
+- 📊 **Progreso**: Seguimiento de objetivos
+- 🏢 **Clubs**: Información de gimnasios
+- ⏱️ **Temporizador**: Cronómetro para entrenamientos
 
-### Advanced Configuration
+### Backend
+- 🔐 **Autenticación**: Login/registro con JWT
+- 📝 **Rutinas**: CRUD de rutinas de ejercicio
+- 👥 **Usuarios**: Gestión de perfiles
+- 🛡️ **Middleware**: Validación y seguridad
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🏗️ Estructura del Proyecto
 
-### Deployment
+```
+gymapp/
+├── src/                    # Frontend React
+│   ├── components/         # Componentes reutilizables
+│   ├── paginas/           # Páginas principales
+│   ├── api/               # Configuración de API
+│   ├── utils/             # Utilidades
+│   └── img/               # Imágenes
+├── backend/               # Backend Node.js
+│   ├── routes/            # Rutas de API
+│   ├── models/            # Modelos de MongoDB
+│   ├── middleware/        # Middleware personalizado
+│   └── server.js          # Servidor principal
+├── public/                # Archivos estáticos
+└── docs/                  # Documentación
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 🚀 Despliegue en Hostinger
 
-### `npm run build` fails to minify
+### 1. Preparar archivos
+```bash
+npm run deploy:prepare
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### 2. Configurar en Hostinger
+- Habilitar Node.js en el panel
+- Subir archivos según `HOSTINGER-GUIDE.md`
+- Configurar variables de entorno
+- Instalar dependencias del backend
+
+### 3. URLs de producción
+- **Frontend**: `https://tu-dominio.com`
+- **Backend**: `https://tu-dominio.com/backend`
+
+## 🔧 Tecnologías Utilizadas
+
+### Frontend
+- **React 19** - Framework principal
+- **React Router** - Navegación
+- **React Toastify** - Notificaciones
+- **PropTypes** - Validación de props
+- **Lazy Loading** - Carga diferida
+
+### Backend
+- **Node.js** - Runtime
+- **Express** - Framework web
+- **MongoDB** - Base de datos
+- **Mongoose** - ODM
+- **JWT** - Autenticación
+- **CORS** - Cross-origin requests
+
+## 📚 Documentación Adicional
+
+- [Guía de Desarrollo](README-DEV.md)
+- [Guía de Despliegue](HOSTINGER-GUIDE.md)
+- [Configuración de MongoDB](HOSTINGER-DEPLOY.md)
+
+## 🐛 Solución de Problemas
+
+### Error de conexión a MongoDB
+1. Verificar cadena de conexión
+2. Comprobar IP en whitelist
+3. Revisar credenciales de usuario
+
+### Error 502/503 en producción
+1. Verificar que Node.js esté habilitado
+2. Comprobar variables de entorno
+3. Revisar logs en el panel de Hostinger
+
+### CORS Error
+1. Verificar configuración de CORS
+2. Comprobar URLs en variables de entorno
+3. Asegurar uso de HTTPS en producción
+
+## 🤝 Contribución
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+
+## 📞 Soporte
+
+Si tienes problemas o preguntas:
+1. Revisa la documentación
+2. Busca en los issues existentes
+3. Crea un nuevo issue con detalles del problema
+
+---
+
+**¡Disfruta entrenando! 💪**

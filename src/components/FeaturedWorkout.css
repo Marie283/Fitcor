@@ -1,0 +1,61 @@
+/* Estilos para FeaturedWorkout */ 
+.featured-workout {
+  margin-bottom: 18px;
+}
+.fw-title {
+  font-weight: bold;
+  color: #ff9100;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.fw-see-all {
+  color: #ff9100;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.fw-banner {
+  background: linear-gradient(90deg, #ff9100 80%, #fff 100%);
+  border-radius: 16px;
+  padding: 16px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.fw-desc {
+  font-size: 1rem;
+}
+.fw-details {
+  font-size: 0.85rem;
+  color: #fff;
+}
+.fw-access {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.2s;
+}
+.fw-access:hover {
+  background: #5b21b6;
+} 
+.featured-workout, .fw-banner, .fw-access {
+  border-radius: 18px;
+  font-family: 'Arial Rounded MT Bold', 'Segoe UI', Arial, sans-serif !important;
+} 
+.fw-img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-right: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+} 

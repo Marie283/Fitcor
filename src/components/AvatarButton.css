@@ -1,0 +1,34 @@
+.avatar-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: border 0.2s;
+  font-family: 'Arial Rounded MT Bold', 'Segoe UI', Arial, sans-serif !important;
+  padding: 0;
+}
+.avatar-btn:hover {
+  border: 1.5px solid #ff9100;
+}
+.avatar-icon {
+  color: #222;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.avatar-btn img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+} 

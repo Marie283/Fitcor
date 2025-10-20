@@ -1,0 +1,48 @@
+.week-visits, .day-circle {
+  border-radius: 18px;
+  font-family: 'Arial Rounded MT Bold', 'Segoe UI', Arial, sans-serif !important;
+}
+.week-title {
+  font-weight: bold;
+  color: #ff9100;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.see-visits {
+  color: #ff9100;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.days-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.day-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f3f3f3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  color: #888;
+  border: 2px solid transparent;
+}
+.day-circle.active {
+  background: #ff9100;
+  color: #fff;
+  border: 2px solid #ff9100;
+}
+.day-num {
+  font-weight: bold;
+}
+.set-goal {
+  font-size: 0.95rem;
+  color: #888;
+  margin-top: 4px;
+} 
