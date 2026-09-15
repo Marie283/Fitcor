@@ -1,14 +1,10 @@
+import { logger } from 'utils/logger';
+
 // Resolver de baseURL para el backend sin hardcodear puertos
 export function getApiBaseUrl() {
-  // 1) Prioriza variable de entorno (Vite o CRA)
-  let viteUrl;
-  try {
-    viteUrl = import.meta.env && import.meta.env.VITE_API_URL;
-  } catch (_e) {
-    viteUrl = undefined;
-  }
-  const craUrl = typeof process !== 'undefined' ? process.env.REACT_APP_API_URL : undefined;
-  const envUrl = viteUrl || craUrl;
+  // 1) Prioriza la variable de entorno de CRA (.env.production / .env.local).
+  // No se usa import.meta.env (propio de Vite): este proyecto es CRA y Jest no lo entiende.
+  const envUrl = process.env.REACT_APP_API_URL;
   if (envUrl) return String(envUrl).replace(/\/$/, '');
 
   // 2) Si el frontend está servido por el mismo host, usa mismo origen
@@ -46,7 +42,7 @@ export async function apiFetch(path, options = {}, token = null) {
     },
   };
 
-  console.log('🌐 API Request:', {
+  logger.log('🌐 API Request:', {
     url,
     method: finalOptions.method || 'GET',
     hasToken: !!token,
@@ -55,25 +51,17 @@ export async function apiFetch(path, options = {}, token = null) {
 
   try {
     const response = await fetch(url, finalOptions);
-    
-    console.log('📡 API Response:', {
+
+    logger.log('📡 API Response:', {
       status: response.status,
       statusText: response.statusText,
       url: response.url
     });
 
-    // Si la respuesta no es OK, intentar extraer el mensaje de error
-    if (!response.ok) {
-      let errorMsg = `Error ${response.status}: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        errorMsg = errorData.msg || errorData.message || errorMsg;
-      } catch (_e) {
-        // Si no hay JSON, usar mensaje por defecto
-      }
-      throw new Error(errorMsg);
-    }
-
+    // Los llamadores (Login.js, crearrutina.js) comprueban response.ok y leen
+    // el .json() ellos mismos, así que aquí NO se lanza error por códigos 4xx/5xx:
+    // solo así pueden mostrar el mensaje real del servidor (ej. "Credenciales inválidas")
+    // en vez de caer siempre en el catch genérico de fallo de red.
     return response;
   } catch (error) {
     throw error;

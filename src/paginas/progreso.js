@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import ProgresoVisitas from './ProgresoVisitas';
-import ProgresoEntrenamientos from './ProgresoEntrenamientos';
-import ProgresoDatos from './ProgresoDatos';
-import ProgresoInsignias from './ProgresoInsignias';
+import ProgresoVisitas from 'paginas/progreso-visitas';
+import ProgresoEntrenamientos from 'paginas/progreso-entrenamientos';
+import ProgresoDatos from 'paginas/progreso-datos';
+import ProgresoInsignias from 'paginas/progreso-insignias';
 
+// Pantalla de Progreso: actúa como contenedor de pestañas y delega el renderizado
+// de cada sección (Mis datos, Entrenamientos, Visitas, Insignias) al subcomponente
+// correspondiente, pasándole la pestaña activa y la función para cambiarla.
 function Progreso({ onGotoEntrenamiento }) {
+  // Pestaña actualmente seleccionada dentro de Progreso
   const [tab, setTab] = useState('Mis datos');
 
+  // Selecciona qué subcomponente mostrar según la pestaña activa
   let contenido = null;
   if (tab === 'Visitas') {
     contenido = <ProgresoVisitas activeTab={tab} onTabChange={setTab} />;
@@ -19,7 +24,7 @@ function Progreso({ onGotoEntrenamiento }) {
   }
 
   return (
-    <div className="progreso-responsive" style={{ maxWidth: '100vw', margin: '0 auto', padding: '16px 0', fontFamily: `'Arial Rounded MT Bold', 'Segoe UI', Arial, sans-serif` }}>
+    <div className="progreso-responsive">
       {contenido}
     </div>
   );

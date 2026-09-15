@@ -3,3 +3,8 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
+
+// react-router 7 usa TextEncoder/TextDecoder, que el entorno jsdom de Jest 27
+// (el que trae react-scripts) no incluye; se toman de Node.
+Object.assign(global, { TextEncoder, TextDecoder });

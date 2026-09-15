@@ -8,7 +8,6 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
     "leaflet": "^1.9.4",
-    "mongoose": "^8.19.1",
     "prop-types": "^15.8.1",
     "qrcode.react": "^4.2.0",
     "react": "^19.1.0",
@@ -31,10 +30,7 @@
     "backend": "cd backend && npm start",
     "backend:dev": "cd backend && npm run dev",
     "dev:full": "concurrently \"npm run backend:dev\" \"npm run frontend\"",
-    "deploy": "bash deploy.sh",
-    "deploy:prepare": "npm run build && echo 'Build listo para subir a Hostinger'",
     "clean": "node kill-ports.js"
-
   },
   "eslintConfig": {
     "extends": [
@@ -56,5 +52,11 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
+      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js"
+    }
   }
 }

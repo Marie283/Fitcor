@@ -1,14 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
+import 'paginas/css/temporizador.css';
 
+// Rellena con un cero a la izquierda los números menores de 10 (para mostrar "0:07" en vez de "0:7")
 function pad(n) {
   return n < 10 ? '0' + n : n;
 }
 
-function CircularProgress({ percent, color = '#ff9100', size = 220, stroke = 14 }) {
+// Anillo de progreso circular reutilizable: dibuja un círculo de fondo (pista completa)
+// y otro por encima cuyo trazo se va "vaciando" según percent (1 = lleno, 0 = vacío),
+// usado para mostrar visualmente cuánto queda de la fase actual (esfuerzo/descanso/reposo).
+function CircularProgress({ percent, color = 'var(--brand-orange)', size = 220, stroke = 14 }) {
+  // radio del círculo, descontando el grosor del trazo
   const r = (size - stroke) / 2;
+  // longitud total de la circunferencia (perímetro)
   const c = 2 * Math.PI * r;
   return (
     <svg width={size} height={size}>
+      {/* Pista de fondo, siempre completa */}
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -17,6 +25,7 @@ function CircularProgress({ percent, color = '#ff9100', size = 220, stroke = 14 
         strokeWidth={stroke}
         fill="none"
       />
+      {/* Trazo de progreso: strokeDasharray/strokeDashoffset simulan el "vaciado" del círculo */}
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -27,30 +36,41 @@ function CircularProgress({ percent, color = '#ff9100', size = 220, stroke = 14 
         strokeDasharray={c}
         strokeDashoffset={c * (1 - percent)}
         strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 0.3s linear' }}
+        className="temporizador-ring-progress"
       />
     </svg>
   );
 }
 
+// Temporizador de intervalos (tipo HIIT): alterna fases de esfuerzo/descanso por cada
+// ejercicio, y una fase de reposo más larga al completar todos los ejercicios de una ronda.
+// config (esfuerzo, descanso, reposo, ejercicios, rondas, sonido) vive en el padre para
+// que la configuración se conserve aunque el usuario salga y vuelva a esta pantalla.
 function Temporizador({ config, setConfig, onBack }) {
-  const [editKey, setEditKey] = useState(null);
-  const [editValue, setEditValue] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
-  const [fase, setFase] = useState('esfuerzo'); // 'esfuerzo' | 'descanso' | 'reposo' | 'fin'
-  const [segundos, setSegundos] = useState(config.esfuerzo);
-  const [ejercicio, setEjercicio] = useState(1);
-  const [ronda, setRonda] = useState(1);
+  // Estados agrupados por finalidad:
+  // - edicion: campo de config que se edita en el modal ('esfuerzo', 'rondas'...; null = modal
+  //   cerrado) y su valor temporal antes de confirmarlo con "HECHO"
+  // - estado: si se ve la pantalla de cuenta atrás y si está corriendo o en pausa
+  // - sesion: punto del entrenamiento. fase: 'esfuerzo' | 'descanso' | 'reposo' | 'fin';
+  //   segundos restantes de la fase, ejercicio actual (1..config.ejercicios) y ronda (1..config.rondas)
+  const [edicion, setEdicion] = useState({ campo: null, valor: 0 });
+  const [estado, setEstado] = useState({ visible: false, enMarcha: false });
+  const [sesion, setSesion] = useState({ fase: 'esfuerzo', segundos: config.esfuerzo, ejercicio: 1, ronda: 1 });
+  const { campo: editKey, valor: editValue } = edicion;
+  const { visible: showTimer, enMarcha: running } = estado;
+  const { fase, segundos, ejercicio, ronda } = sesion;
   const timerRef = useRef();
 
+  // Motor de la cuenta atrás: cada segundo resta 1 a "segundos", o pasa a la siguiente
+  // fase con handleNext() cuando llega a 0. Se detiene si el temporizador no está visible,
+  // está en pausa, o ya se llegó a la fase 'fin'.
   useEffect(() => {
     if (!showTimer) return;
     if (!running) return;
     if (fase === 'fin') return;
     timerRef.current = setTimeout(() => {
       if (segundos > 1) {
-        setSegundos(segundos - 1);
+        setSesion(prev => ({ ...prev, segundos: prev.segundos - 1 }));
       } else {
         handleNext();
       }
@@ -59,93 +79,91 @@ function Temporizador({ config, setConfig, onBack }) {
     // eslint-disable-next-line
   }, [showTimer, running, segundos, fase]);
 
+  // Avanza a la siguiente fase del entrenamiento: de esfuerzo pasa a descanso (si quedan
+  // ejercicios) o a reposo/fin (si se acabó la ronda); de descanso vuelve a esfuerzo con
+  // el siguiente ejercicio; de reposo vuelve a esfuerzo reiniciando ejercicios en la ronda siguiente.
   const handleNext = () => {
     if (fase === 'esfuerzo') {
       if (ejercicio < config.ejercicios) {
-        setFase('descanso');
-        setSegundos(config.descanso);
+        setSesion(prev => ({ ...prev, fase: 'descanso', segundos: config.descanso }));
       } else {
         if (ronda < config.rondas) {
-          setFase('reposo');
-          setSegundos(config.reposo);
+          setSesion(prev => ({ ...prev, fase: 'reposo', segundos: config.reposo }));
         } else {
-          setFase('fin');
+          setSesion(prev => ({ ...prev, fase: 'fin' }));
         }
       }
     } else if (fase === 'descanso') {
-      setFase('esfuerzo');
-      setEjercicio(ejercicio + 1);
-      setSegundos(config.esfuerzo);
+      setSesion(prev => ({ ...prev, fase: 'esfuerzo', ejercicio: prev.ejercicio + 1, segundos: config.esfuerzo }));
     } else if (fase === 'reposo') {
-      setFase('esfuerzo');
-      setEjercicio(1);
-      setRonda(ronda + 1);
-      setSegundos(config.esfuerzo);
+      setSesion(prev => ({ ...prev, fase: 'esfuerzo', ejercicio: 1, ronda: prev.ronda + 1, segundos: config.esfuerzo }));
     }
   };
 
+  // Inicia el entrenamiento desde cero: muestra la pantalla de cuenta atrás y
+  // reinicia fase, segundos, ejercicio y ronda a sus valores iniciales.
   const handleStart = () => {
-    setShowTimer(true);
-    setRunning(true);
-    setFase('esfuerzo');
-    setSegundos(config.esfuerzo);
-    setEjercicio(1);
-    setRonda(1);
+    setEstado({ visible: true, enMarcha: true });
+    setSesion({ fase: 'esfuerzo', segundos: config.esfuerzo, ejercicio: 1, ronda: 1 });
   };
 
-  const handlePause = () => setRunning(false);
-  const handleResume = () => setRunning(true);
+  const handlePause = () => setEstado(prev => ({ ...prev, enMarcha: false }));
+  const handleResume = () => setEstado(prev => ({ ...prev, enMarcha: true }));
+  // Sale del temporizador y vuelve a la pantalla de configuración, sin perder el config actual
   const handleSalir = () => {
-    setShowTimer(false);
-    setRunning(false);
+    setEstado({ visible: false, enMarcha: false });
   };
 
   // --- Pantalla de temporizador funcional ---
   if (showTimer) {
+    // Pantalla final al completar todas las rondas configuradas
     if (fase === 'fin') {
       return (
-        <div style={{ background: '#111', minHeight: '100vh', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: `'Arial Rounded MT Bold', 'Segoe UI', Arial, sans-serif` }}>
-          <div style={{ fontSize: 32, fontWeight: 900, marginBottom: 24 }}>¡Entrenamiento finalizado!</div>
-          <button onClick={handleSalir} style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 14, padding: '16px 40px', fontWeight: 900, fontSize: 18, marginTop: 18, letterSpacing: 1, cursor: 'pointer' }}>Salir</button>
+        <div className="temporizador-fin">
+          <div className="temporizador-fin-titulo">¡Entrenamiento finalizado!</div>
+          <button onClick={handleSalir} className="temporizador-fin-salir">Salir</button>
         </div>
       );
     }
+    // Duración total de la fase actual y fracción restante, usados para el anillo de progreso
     const totalFase = fase === 'esfuerzo' ? config.esfuerzo : fase === 'descanso' ? config.descanso : config.reposo;
     const percent = segundos / totalFase;
     return (
-      <div style={{ background: '#111', minHeight: '100vh', color: '#fff', fontFamily: `'Arial Rounded MT Bold', 'Segoe UI', Arial, sans-serif` }}>
-        <div style={{ maxWidth: 400, margin: '0 auto', padding: '0 0 24px 0', position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 18px 0 18px' }}>
-            <button onClick={handleSalir} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 26, fontWeight: 700, cursor: 'pointer' }}>×</button>
-            <span style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.5px' }}>{`0:${pad(segundos)}`}</span>
-            <span style={{ fontSize: 22, color: '#fff', opacity: 0.5 }}>▢</span>
+      <div className="temporizador-page">
+        <div className="temporizador-content">
+          <div className="temporizador-header">
+            <button onClick={handleSalir} className="temporizador-close-btn">×</button>
+            <span className="temporizador-header-time">{`0:${pad(segundos)}`}</span>
+            <span className="temporizador-header-square">▢</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 32, margin: '32px 0 0 0' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontWeight: 900, fontSize: 28 }}>{ejercicio}/{config.ejercicios}</div>
-              <div style={{ fontWeight: 700, fontSize: 13, color: '#aaa', letterSpacing: 1 }}>EJERCICIOS</div>
+          {/* Contadores de ejercicio y ronda actuales frente al total configurado */}
+          <div className="temporizador-contadores">
+            <div className="temporizador-contador">
+              <div className="temporizador-contador-valor">{ejercicio}/{config.ejercicios}</div>
+              <div className="temporizador-contador-label">EJERCICIOS</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontWeight: 900, fontSize: 28 }}>{ronda}/{config.rondas}</div>
-              <div style={{ fontWeight: 700, fontSize: 13, color: '#aaa', letterSpacing: 1 }}>RONDAS</div>
+            <div className="temporizador-contador">
+              <div className="temporizador-contador-valor">{ronda}/{config.rondas}</div>
+              <div className="temporizador-contador-label">RONDAS</div>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '32px 0 0 0' }}>
-            <div style={{ position: 'relative', width: 220, height: 220 }}>
-              <CircularProgress percent={percent} color={fase === 'esfuerzo' ? '#ff9100' : '#4ed6c4'} />
-              <div style={{ position: 'absolute', top: 0, left: 0, width: 220, height: 220, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ fontWeight: 700, fontSize: 22, color: fase === 'esfuerzo' ? '#ff9100' : '#4ed6c4', marginBottom: 6 }}>{fase.toUpperCase()}</div>
-                <div style={{ fontWeight: 900, fontSize: 54, letterSpacing: '-2px', lineHeight: 1 }}>{`00:${pad(segundos)}`}</div>
+          {/* Anillo de progreso con el nombre de la fase y el tiempo restante superpuestos en el centro */}
+          <div className="temporizador-ring-wrap">
+            <div className="temporizador-ring-inner">
+              <CircularProgress percent={percent} color={fase === 'esfuerzo' ? 'var(--brand-orange)' : 'var(--accent-teal)'} />
+              <div className="temporizador-ring-overlay">
+                <div className={`temporizador-fase-label ${fase === 'esfuerzo' ? 'temporizador-fase-label--esfuerzo' : 'temporizador-fase-label--descanso'}`}>{fase.toUpperCase()}</div>
+                <div className="temporizador-ring-tiempo">{`00:${pad(segundos)}`}</div>
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 32, marginTop: 36 }}>
+          <div className="temporizador-controles">
             {running ? (
-              <button onClick={handlePause} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 44, cursor: 'pointer' }}>❚❚</button>
+              <button onClick={handlePause} className="temporizador-pausa-btn">❚❚</button>
             ) : (
-              <button onClick={handleResume} style={{ background: 'none', border: 'none', color: '#7c3aed', fontSize: 44, cursor: 'pointer' }}>▶️</button>
+              <button onClick={handleResume} className="temporizador-play-btn">▶️</button>
             )}
-            <button onClick={handleNext} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 38, cursor: 'pointer' }}>⏭️</button>
+            <button onClick={handleNext} className="temporizador-siguiente-btn">⏭️</button>
           </div>
         </div>
       </div>
@@ -153,6 +171,8 @@ function Temporizador({ config, setConfig, onBack }) {
   }
 
   // --- Pantalla de configuración (por defecto) ---
+  // Calcula la duración total estimada del entrenamiento a partir de la config actual:
+  // (esfuerzo + descanso) por cada ejercicio y ronda, más el reposo entre rondas.
   const totalTime = () => {
     // Tiempo total estimado (simple)
     const { esfuerzo, descanso, ejercicios, rondas, reposo } = config;
@@ -162,107 +182,105 @@ function Temporizador({ config, setConfig, onBack }) {
     return `${pad(min)}:${pad(sec)}`;
   };
 
+  // Abre el modal de edición para el campo de config indicado, precargando su valor actual
   const handleEdit = (key, value) => {
-    setEditKey(key);
-    setEditValue(value);
+    setEdicion({ campo: key, valor: value });
   };
 
+  // Confirma el valor editado en el modal y lo guarda en config (elevado al padre)
   const handleSave = () => {
     setConfig({ ...config, [editKey]: Number(editValue) });
-    setEditKey(null);
+    setEdicion(prev => ({ ...prev, campo: null }));
   };
 
   return (
-    <div style={{ background: '#111', minHeight: '100vh', color: '#fff', fontFamily: `'Arial Rounded MT Bold', 'Segoe UI', Arial, sans-serif` }}>
-      <div style={{ maxWidth: 400, margin: '0 auto', padding: '0 0 24px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', padding: '18px 18px 0 18px' }}>
-          <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 26, fontWeight: 700, cursor: 'pointer', marginRight: 8 }}>&larr;</button>
-          <span style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.5px' }}>TEMPORIZADOR DE INTERVALOS</span>
+    <div className="temporizador-page">
+      <div className="temporizador-content">
+        <div className="temporizador-header temporizador-header--config">
+          <button onClick={onBack} className="temporizador-back-btn">&larr;</button>
+          <span className="temporizador-header-titulo">TEMPORIZADOR DE INTERVALOS</span>
         </div>
-        <div style={{ textAlign: 'center', margin: '32px 0 8px 0' }}>
-          <div style={{ fontWeight: 900, fontSize: 54, letterSpacing: '-2px', lineHeight: 1 }}>{totalTime()}</div>
-          <div style={{ color: '#ff9100', fontWeight: 700, fontSize: 15, marginTop: 2 }}>TIEMPO PREVISTO</div>
+        <div className="temporizador-previsto">
+          <div className="temporizador-previsto-valor">{totalTime()}</div>
+          <div className="temporizador-previsto-label">TIEMPO PREVISTO</div>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', margin: '32px 0 24px 0' }}>
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ color: '#ff9100', fontSize: 22 }}>▶️</span>
-              <span style={{ fontWeight: 700 }}>ESFUERZO</span>
+        {/* Tarjetas de configuración: cada una muestra un valor de config y un botón ✏️ para editarlo */}
+        <div className="temporizador-cards">
+          <div className="temporizador-card">
+            <div className="temporizador-card-titulo">
+              <span className="temporizador-card-icono temporizador-card-icono--orange">▶️</span>
+              <span className="temporizador-card-label">ESFUERZO</span>
             </div>
-            <div style={{ color: '#ff9100', fontWeight: 700, fontSize: 20 }}>{`00:${pad(config.esfuerzo)}`}</div>
-            <button style={editBtnStyle} onClick={() => handleEdit('esfuerzo', config.esfuerzo)}>✏️</button>
+            <div className="temporizador-card-valor temporizador-card-valor--orange">{`00:${pad(config.esfuerzo)}`}</div>
+            <button className="temporizador-edit-btn" onClick={() => handleEdit('esfuerzo', config.esfuerzo)}>✏️</button>
           </div>
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ color: '#4ed6c4', fontSize: 22 }}>⏳</span>
-              <span style={{ fontWeight: 700 }}>DESCANSO</span>
+          <div className="temporizador-card">
+            <div className="temporizador-card-titulo">
+              <span className="temporizador-card-icono temporizador-card-icono--teal">⏳</span>
+              <span className="temporizador-card-label">DESCANSO</span>
             </div>
-            <div style={{ color: '#4ed6c4', fontWeight: 700, fontSize: 20 }}>{`00:${pad(config.descanso)}`}</div>
-            <button style={editBtnStyle} onClick={() => handleEdit('descanso', config.descanso)}>✏️</button>
+            <div className="temporizador-card-valor temporizador-card-valor--teal">{`00:${pad(config.descanso)}`}</div>
+            <button className="temporizador-edit-btn" onClick={() => handleEdit('descanso', config.descanso)}>✏️</button>
           </div>
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ color: '#fff', fontSize: 22 }}>🏋️‍♂️</span>
-              <span style={{ fontWeight: 700 }}>EJERCICIOS</span>
+          <div className="temporizador-card">
+            <div className="temporizador-card-titulo">
+              <span className="temporizador-card-icono temporizador-card-icono--blanco">🏋️‍♂️</span>
+              <span className="temporizador-card-label">EJERCICIOS</span>
             </div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 20 }}>{config.ejercicios}</div>
-            <button style={editBtnStyle} onClick={() => handleEdit('ejercicios', config.ejercicios)}>✏️</button>
+            <div className="temporizador-card-valor temporizador-card-valor--blanco">{config.ejercicios}</div>
+            <button className="temporizador-edit-btn" onClick={() => handleEdit('ejercicios', config.ejercicios)}>✏️</button>
           </div>
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ color: '#fff', fontSize: 22 }}>🔁</span>
-              <span style={{ fontWeight: 700 }}>RONDAS</span>
+          <div className="temporizador-card">
+            <div className="temporizador-card-titulo">
+              <span className="temporizador-card-icono temporizador-card-icono--blanco">🔁</span>
+              <span className="temporizador-card-label">RONDAS</span>
             </div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 20 }}>{config.rondas}</div>
-            <button style={editBtnStyle} onClick={() => handleEdit('rondas', config.rondas)}>✏️</button>
+            <div className="temporizador-card-valor temporizador-card-valor--blanco">{config.rondas}</div>
+            <button className="temporizador-edit-btn" onClick={() => handleEdit('rondas', config.rondas)}>✏️</button>
           </div>
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ color: '#4ed6c4', fontSize: 22 }}>⏲️</span>
-              <span style={{ fontWeight: 700 }}>REPOSO</span>
+          <div className="temporizador-card">
+            <div className="temporizador-card-titulo">
+              <span className="temporizador-card-icono temporizador-card-icono--teal">⏲️</span>
+              <span className="temporizador-card-label">REPOSO</span>
             </div>
-            <div style={{ color: '#4ed6c4', fontWeight: 700, fontSize: 20 }}>{`0${Math.floor(config.reposo/60)}:${pad(config.reposo%60)}`}</div>
-            <button style={editBtnStyle} onClick={() => handleEdit('reposo', config.reposo)}>✏️</button>
+            <div className="temporizador-card-valor temporizador-card-valor--teal">{`0${Math.floor(config.reposo/60)}:${pad(config.reposo%60)}`}</div>
+            <button className="temporizador-edit-btn" onClick={() => handleEdit('reposo', config.reposo)}>✏️</button>
           </div>
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ color: '#fff', fontSize: 22 }}>🔊</span>
-              <span style={{ fontWeight: 700 }}>SONIDO</span>
+          <div className="temporizador-card">
+            <div className="temporizador-card-titulo">
+              <span className="temporizador-card-icono temporizador-card-icono--blanco">🔊</span>
+              <span className="temporizador-card-label">SONIDO</span>
             </div>
-            <div style={{ marginTop: 8 }}>
-              <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
-                <input type="checkbox" checked={config.sonido} onChange={e => setConfig({ ...config, sonido: e.target.checked })} style={{ display: 'none' }} />
-                <span style={{
-                  width: 36, height: 20, borderRadius: 12, background: config.sonido ? '#ff9100' : '#888', display: 'inline-block', position: 'relative', transition: 'background 0.2s',
-                }}>
-                  <span style={{
-                    position: 'absolute', left: config.sonido ? 18 : 2, top: 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s',
-                  }}></span>
+            {/* Interruptor de sonido, con checkbox real oculto y un toggle dibujado a mano con spans */}
+            <div className="temporizador-sonido-wrap">
+              <label className="temporizador-sonido-label">
+                <input type="checkbox" checked={config.sonido} onChange={e => setConfig({ ...config, sonido: e.target.checked })} className="temporizador-sonido-checkbox" />
+                <span className={`temporizador-toggle ${config.sonido ? 'temporizador-toggle--activo' : ''}`}>
+                  <span className={`temporizador-toggle-knob ${config.sonido ? 'temporizador-toggle-knob--activo' : ''}`}></span>
                 </span>
               </label>
             </div>
           </div>
         </div>
-        <button onClick={handleStart} style={{ width: '100%', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 14, padding: '16px 0', fontWeight: 900, fontSize: 18, marginTop: 18, letterSpacing: 1, cursor: 'pointer', boxShadow: '0 2px 8px rgba(124,62,237,0.10)' }}>
+        <button onClick={handleStart} className="temporizador-comenzar-btn">
           COMENZAR
         </button>
       </div>
+      {/* Modal inferior para editar un valor de config; solo visible si editKey no es null */}
       {editKey && (
-        <div style={{
-          position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        }}>
-          <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 400, padding: '32px 0 16px 0', textAlign: 'center', fontFamily: `'Arial Rounded MT Bold', 'Segoe UI', Arial, sans-serif` }}>
-            <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 18 }}>Editar valor</div>
+        <div className="temporizador-modal-overlay">
+          <div className="temporizador-modal">
+            <div className="temporizador-modal-titulo">Editar valor</div>
             <input
               type="number"
               value={editValue}
-              onChange={e => setEditValue(e.target.value)}
-              style={{ fontSize: 28, fontWeight: 900, border: 'none', borderBottom: '2px solid #ff9100', outline: 'none', width: 80, textAlign: 'center', marginBottom: 18 }}
+              onChange={e => setEdicion(prev => ({ ...prev, valor: e.target.value }))}
+              className="temporizador-modal-input"
               min={0}
             />
             <div>
-              <button onClick={handleSave} style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 32px', fontWeight: 700, fontSize: 16, cursor: 'pointer', marginRight: 8 }}>HECHO</button>
-              <button onClick={() => setEditKey(null)} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 12, padding: '12px 32px', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleSave} className="temporizador-modal-hecho-btn">HECHO</button>
+              <button onClick={() => setEdicion(prev => ({ ...prev, campo: null }))} className="temporizador-modal-cancelar-btn">Cancelar</button>
             </div>
           </div>
         </div>
@@ -270,34 +288,5 @@ function Temporizador({ config, setConfig, onBack }) {
     </div>
   );
 }
-
-const cardStyle = {
-  background: '#222',
-  borderRadius: 16,
-  padding: '18px 16px 12px 16px',
-  minWidth: 140,
-  minHeight: 90,
-  flex: '1 1 120px',
-  maxWidth: 170,
-  margin: 0,
-  position: 'relative',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-start',
-  justifyContent: 'flex-start',
-};
-
-const editBtnStyle = {
-  position: 'absolute',
-  right: 10,
-  bottom: 10,
-  background: 'none',
-  border: 'none',
-  color: '#fff',
-  fontSize: 18,
-  cursor: 'pointer',
-  padding: 0,
-};
 
 export default Temporizador; 

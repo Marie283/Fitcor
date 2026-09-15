@@ -1,24 +1,22 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import Header from './components/Header';
-import BadgeBanner from './components/BadgeBanner';
-import WeekVisits from './components/WeekVisits';
-import FeaturedWorkout from './components/FeaturedWorkout';
-import CoachTips from './components/CoachTips';
-import BenefitsBanner from './components/BenefitsBanner';
-import BottomNav from './components/BottomNav';
-import Login from './components/Login';
-import Home from './components/Home';
-import { ToastProvider } from './components/Toast';
-import './components/Home.css';
+import Header from 'components/header';
+import BottomNav from 'components/bottom-nav';
+import Login from 'components/login';
+import { ToastProvider } from 'components/toast';
+import { AuthProvider, useAuth } from 'context/auth-context';
+import 'components/css/home.css';
+import './App.css';
 
-// Lazy loading para mejorar rendimiento
-const Perfil = lazy(() => import('./paginas/perfil'));
-const Entrenamiento = lazy(() => import('./paginas/entrenamiento'));
-const Progreso = lazy(() => import('./paginas/progreso'));
-const Clubs = lazy(() => import('./paginas/clubs'));
-const Temporizador = lazy(() => import('./paginas/temporizador'));
-const CrearRutina = lazy(() => import('./paginas/crearrutina'));
+// Lazy loading para mejorar rendimiento. Home también se carga bajo demanda: así la
+// pantalla de login no descarga la portada (carruseles, código QR...) hasta iniciar sesión.
+const Home = lazy(() => import('components/home'));
+const Perfil = lazy(() => import('paginas/perfil'));
+const Entrenamiento = lazy(() => import('paginas/entrenamiento'));
+const Progreso = lazy(() => import('paginas/progreso'));
+const Clubs = lazy(() => import('paginas/clubs'));
+const Temporizador = lazy(() => import('paginas/temporizador'));
+const CrearRutina = lazy(() => import('paginas/crear-rutina'));
 
 // Componente principal de la aplicación
 function AppContent() {
@@ -41,17 +39,8 @@ function AppContent() {
     rutinas: []
   });
 
-  const [isLogged, setIsLogged] = useState(false);
-  const [token, setToken] = useState(null);
-
-  // Verificar autenticación al cargar
-  useEffect(() => {
-  const savedToken = localStorage.getItem('token');
-  if (savedToken) {
-    setToken(savedToken);
-    setIsLogged(true);
-  }
-}, []);
+  // Estado de autenticación (token / isLogged / login / logout) provisto por AuthContext
+  const { token, isLogged, login, handleLogout } = useAuth();
 
   // Función para manejar cambios de navegación
   const handleTabChange = (tab) => {
@@ -78,13 +67,6 @@ function AppContent() {
     }
   };
 
-  const handleLogout = () => {
-  localStorage.removeItem('token');
-  setToken(null);
-  setIsLogged(false);
-  navigate('/');
-};
-
   // Obtener tab activa basada en la ruta actual
   const getActiveTab = () => {
     const path = location.pathname;
@@ -97,10 +79,7 @@ function AppContent() {
   };
 
   if (!isLogged) {
-  return <Login onLogin={(newToken) => {
-    setToken(newToken);
-    setIsLogged(true);
-  }} />;
+  return <Login onLogin={login} />;
 }
 
   return (
@@ -110,7 +89,7 @@ function AppContent() {
         foto={appState.fotoPerfil} 
       />
       
-      <Suspense fallback={<div style={{ textAlign: 'center', padding: '50px' }}>Cargando...</div>}>
+      <Suspense fallback={<div className="app-loading-fallback">Cargando...</div>}>
         <Routes>
           <Route 
             path="/" 
@@ -190,7 +169,9 @@ function App() {
   return (
     <Router>
       <ToastProvider />
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Router>
   );
 }

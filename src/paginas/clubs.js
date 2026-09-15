@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useMap } from 'react-leaflet';
 import { useEffect } from 'react';
+import 'paginas/css/clubs.css';
 
 const clubsEjemplo = [
   {
@@ -95,48 +96,48 @@ function Clubs() {
   };
 
   return (
-    <div className="clubs-responsive" style={{ maxWidth: '100vw', margin: '0 auto', padding: '16px 0', fontFamily: `'Arial Rounded MT Bold', Arial, sans-serif` }}>
+    <div className="clubs-page">
       {/* Clubes favoritos */}
-      <div style={{ background: 'linear-gradient(90deg, #ff9100 60%, #ffb347 100%)', padding: '18px 0 0 0', borderRadius: '0 0 24px 24px', marginBottom: 18 }}>
-        <div style={{ fontWeight: 900, fontSize: 19, color: '#fff', marginLeft: 18, marginBottom: 10 }}>MIS CLUBES FAVORITOS</div>
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '0 0 18px 18px' }}>
-          {clubs.map((club, i) => (
-            <div key={i} style={{ minWidth: 170, background: '#222', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', position: 'relative' }}>
-              <img src={club.imagen} alt={club.nombre} style={{ width: '100%', height: 80, objectFit: 'cover' }} />
-              <div style={{ position: 'absolute', top: 8, left: 8, background: '#6C2BD7', color: '#fff', borderRadius: 8, fontSize: 12, padding: '2px 8px', fontWeight: 700 }}>Gimnasio de</div>
-              <div style={{ color: '#fff', fontWeight: 900, fontSize: 16, margin: '8px 0 0 10px' }}>{club.nombre}</div>
-              <div style={{ color: '#fff', fontSize: 13, margin: '0 0 10px 10px' }}>{club.ciudad}</div>
+      <div className="clubs-header">
+        <div className="clubs-header-title">MIS CLUBES FAVORITOS</div>
+        <div className="clubs-carousel">
+          {clubs.map((club) => (
+            <div key={club.nombre} className="clubs-card">
+              <img src={club.imagen} alt={club.nombre} className="clubs-card-img" />
+              <div className="clubs-card-badge">Gimnasio de</div>
+              <div className="clubs-card-name">{club.nombre}</div>
+              <div className="clubs-card-city">{club.ciudad}</div>
             </div>
           ))}
           {/* Card para agregar */}
-          <div style={{ minWidth: 170, border: '2px dashed #fff', borderRadius: 14, background: 'rgba(255,255,255,0.12)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 120, cursor: 'pointer' }}
+          <div className="clubs-add-card"
             onClick={() => setShowMap(true)}
           >
-            <div style={{ fontSize: 32, color: '#fff', marginBottom: 6 }}>+</div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>Agregar gimnasio</div>
+            <div className="clubs-add-icon">+</div>
+            <div className="clubs-add-label">Agregar gimnasio</div>
           </div>
         </div>
       </div>
       {/* Modal del mapa */}
       {showMap && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.35)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        <div className="clubs-modal-overlay"
           onClick={e => { if (e.target === e.currentTarget) setShowMap(false); }}
         >
-          <div style={{ background: '#fff', borderRadius: 18, maxWidth: 500, width: '95vw', padding: 0, boxShadow: '0 4px 24px rgba(0,0,0,0.18)', position: 'relative', overflow: 'hidden' }}>
-            <button onClick={() => setShowMap(false)} style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(255,255,255,0.85)', border: 'none', fontSize: 28, color: '#ff9100', cursor: 'pointer', zIndex: 10, fontWeight: 900, lineHeight: 1, borderRadius: 16, padding: '2px 14px', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}>✕</button>
-            <div style={{ height: 420, width: '100%' }}>
-              <MapContainer center={[40.4168, -3.7038]} zoom={3} style={{ height: '100%', width: '100%', borderRadius: 18 }} scrollWheelZoom={false}>
+          <div className="clubs-modal-box">
+            <button onClick={() => setShowMap(false)} className="clubs-modal-close">✕</button>
+            <div className="clubs-map-wrapper">
+              <MapContainer center={[40.4168, -3.7038]} zoom={3} className="clubs-map-container" scrollWheelZoom={false}>
                 <ResizeMap />
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {gimnasiosMapa.map((g, i) => (
-                  <Marker key={i} position={[g.lat, g.lng]} icon={icon}>
+                {gimnasiosMapa.map((g) => (
+                  <Marker key={g.nombre} position={[g.lat, g.lng]} icon={icon}>
                     <Popup>
-                      <div style={{ fontWeight: 900, fontSize: 15, marginBottom: 4 }}>{g.nombre}</div>
-                      <div style={{ fontSize: 14, color: '#888', marginBottom: 8 }}>{g.calle}</div>
-                      <button onClick={() => handleAgregarFavorito(g)} style={{ background: '#6C2BD7', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+                      <div className="clubs-popup-title">{g.nombre}</div>
+                      <div className="clubs-popup-calle">{g.calle}</div>
+                      <button onClick={() => handleAgregarFavorito(g)} className="clubs-popup-btn">
                         Agregar a favoritos
                       </button>
                     </Popup>
@@ -148,9 +149,9 @@ function Clubs() {
         </div>
       )}
       {/* Gráfica de horas populares (estática) */}
-      <div style={{ background: '#fff', borderRadius: 18, margin: '0 14px 18px 14px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', padding: 18 }}>
-        <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 8 }}>Calle Serramagna – Horas más populares del club</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', height: 90, gap: 6, margin: '18px 0 8px 0', justifyContent: 'center' }}>
+      <div className="clubs-hours">
+        <div className="clubs-hours-title">Calle Serramagna – Horas más populares del club</div>
+        <div className="clubs-bars">
           {/* Datos inventados de afluencia por día (lunes a domingo) */}
           {[
             { dia: 'lu', valor: 30 },
@@ -161,47 +162,50 @@ function Clubs() {
             { dia: 'sá', valor: 65 },
             { dia: 'do', valor: 25 },
           ].map((d, i) => (
-            <div key={d.dia} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 22 }}>
-              <div style={{ height: d.valor, width: 16, borderRadius: 6, background: i === 4 ? '#ff9100' : '#6C2BD7', marginBottom: 4, transition: 'height 0.3s' }}></div>
-              <div style={{ fontSize: 13, color: i === 4 ? '#ff9100' : '#888', fontWeight: i === 4 ? 900 : 700 }}>{d.dia}</div>
+            <div key={d.dia} className="clubs-bar-col">
+              <div
+                className={`clubs-bar${i === 4 ? ' clubs-bar--destacada' : ''}`}
+                style={{ '--bar-height': `${d.valor}px` }}
+              ></div>
+              <div className={`clubs-bar-label${i === 4 ? ' clubs-bar-label--destacada' : ''}`}>{d.dia}</div>
             </div>
           ))}
         </div>
-        <div style={{ color: '#ff9100', fontSize: 13, marginTop: 8 }}>● Hora basada en predicciones</div>
+        <div className="clubs-hours-note">● Hora basada en predicciones</div>
       </div>
       {/* Servicios en el gimnasio */}
-      <div style={{ margin: '0 14px 0 14px' }}>
-        <div style={{ fontWeight: 900, fontSize: 15, color: '#222', marginBottom: 10 }}>SERVICIOS EN EL GIMNASIO</div>
-        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '12px 0 12px 14px', borderBottom: '1px solid #f2f2f2', fontWeight: 700, fontSize: 15 }}>
-            <span style={{ marginRight: 10, fontSize: 20 }}>📅</span> Horario de clases colectivas <span style={{ flex: 1 }} /> <span style={{ color: '#ff9100', fontSize: 18, marginRight: 14 }}>→</span>
+      <div className="clubs-services">
+        <div className="clubs-section-title">SERVICIOS EN EL GIMNASIO</div>
+        <div className="clubs-list">
+          <div className="clubs-list-item">
+            <span className="clubs-list-icon">📅</span> Horario de clases colectivas <span className="clubs-list-spacer" /> <span className="clubs-list-arrow">→</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '12px 0 12px 14px', borderBottom: '1px solid #f2f2f2', fontWeight: 700, fontSize: 15 }}>
-            <span style={{ marginRight: 10, fontSize: 20 }}>👁️‍🗨️</span> Encuentra entrenador personal <span style={{ flex: 1 }} /> <span style={{ color: '#ff9100', fontSize: 18, marginRight: 14 }}>→</span>
+          <div className="clubs-list-item">
+            <span className="clubs-list-icon">👁️‍🗨️</span> Encuentra entrenador personal <span className="clubs-list-spacer" /> <span className="clubs-list-arrow">→</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '12px 0 12px 14px', fontWeight: 700, fontSize: 15 }}>
-            <span style={{ marginRight: 10, fontSize: 20 }}>➕</span> Encuentra fisioterapeuta <span style={{ flex: 1 }} /> <span style={{ color: '#ff9100', fontSize: 18, marginRight: 14 }}>→</span>
+          <div className="clubs-list-item clubs-list-item--last">
+            <span className="clubs-list-icon">➕</span> Encuentra fisioterapeuta <span className="clubs-list-spacer" /> <span className="clubs-list-arrow">→</span>
           </div>
         </div>
-        <div style={{ fontWeight: 900, fontSize: 15, color: '#222', margin: '18px 0 10px 0' }}>INSTALACIONES Y SOPORTE</div>
-        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '12px 0 12px 14px', borderBottom: '1px solid #f2f2f2', fontWeight: 700, fontSize: 15 }}>
-            <span style={{ marginRight: 10, fontSize: 20 }}>💬</span> Chat y ayuda <span style={{ flex: 1 }} /> <span style={{ color: '#ff9100', fontSize: 18, marginRight: 14 }}>↗</span>
+        <div className="clubs-section-title clubs-section-title--spaced">INSTALACIONES Y SOPORTE</div>
+        <div className="clubs-list">
+          <div className="clubs-list-item">
+            <span className="clubs-list-icon">💬</span> Chat y ayuda <span className="clubs-list-spacer" /> <span className="clubs-list-arrow">↗</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '12px 0 12px 14px', fontWeight: 700, fontSize: 15 }}>
-            <span style={{ marginRight: 10, fontSize: 20 }}>🏢</span> Instalaciones del club <span style={{ flex: 1 }} /> <span style={{ color: '#ff9100', fontSize: 18, marginRight: 14 }}>↗</span>
+          <div className="clubs-list-item clubs-list-item--last">
+            <span className="clubs-list-icon">🏢</span> Instalaciones del club <span className="clubs-list-spacer" /> <span className="clubs-list-arrow">↗</span>
           </div>
         </div>
       </div>
       {/* Botón buscar gimnasio */}
-      <div style={{ margin: '30px 14px 0 14px' }}>
-        <button style={{ width: '100%', background: '#6C2BD7', color: '#fff', border: 'none', borderRadius: 12, padding: '16px 0', fontWeight: 900, fontSize: 18, letterSpacing: 1, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+      <div className="clubs-search-wrapper">
+        <button className="clubs-search-btn"
           onClick={() => setShowMap(true)}
         >
-          <span style={{ fontSize: 22, marginRight: 10 }}>📍</span> BUSCAR UN GIMNASIO
+          <span className="clubs-search-icon">📍</span> BUSCAR UN GIMNASIO
         </button>
       </div>
-      <div style={{ height: 80 }} />
+      <div className="clubs-bottom-spacer" />
     </div>
   );
 }
