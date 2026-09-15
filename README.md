@@ -1,37 +1,43 @@
-# 🏋️ GymApp - Aplicación de Gimnasio
+# 🏋️ Fitcor - Aplicación de Gimnasio
 
-Una aplicación completa de gimnasio tipo Basic Fit/Synergy Gym con frontend en React y backend en Node.js/Express.
+Aplicación web de gimnasio con frontend en React y backend en Node.js/Express sobre MongoDB Atlas: login de usuarios y gestión de rutinas de entrenamiento (crear, listar, editar y borrar).
+
+- **Web**: https://www.fitcor.fun
+- **API**: https://api.fitcor.fun
+
+## Usuarios de prueba
+
+Credenciales para iniciar sesión en https://www.fitcor.fun:
+
+| Email | Contraseña |
+|---|---|
+| evaluador1@fitcor.fun | Fitcor2026! |
+| evaluador2@fitcor.fun | Fitcor2026! |
+| evaluador3@fitcor.fun | Fitcor2026! |
 
 ## 🚀 Características
 
-- ✅ **Frontend React** con navegación por rutas
-- ✅ **Backend Node.js/Express** con autenticación JWT
-- ✅ **Base de datos MongoDB Atlas**
-- ✅ **Diseño responsive** para móvil, tablet y desktop
-- ✅ **PWA** (Progressive Web App)
-- ✅ **Lazy loading** para mejor rendimiento
-- ✅ **Modales y toasts** en lugar de alerts
-- ✅ **PropTypes** para validación de props
-- ✅ **Logging inteligente** (solo en desarrollo)
+- ✅ **Frontend React** con navegación por rutas (React Router) y carga diferida de páginas (`lazy` + `Suspense`)
+- ✅ **Backend Express** con autenticación JWT, controladores separados de las rutas, Helmet, Morgan y CORS restringido
+- ✅ **MongoDB Atlas** mediante Mongoose, con filtro de búsqueda por nombre (`$regex`)
+- ✅ **CRUD completo** de rutinas
+- ✅ **Diseño responsive** para móvil, tablet y escritorio
+- ✅ **Estado de autenticación global** con Context API y hooks personalizados
+- ✅ **Modales y toasts** en lugar de `alert()`
+- ✅ **Logging solo en desarrollo** en el frontend
 
-## 📋 Requisitos Previos
+## 📋 Requisitos previos
 
-- Node.js 18.x o superior
-- npm o yarn
-- MongoDB Atlas (gratuito)
-- Cuenta en Hostinger o cualquier sitio que te de hosting y dominio (para producción)
+- Node.js 18 o superior
+- npm
+- Una base de datos en MongoDB Atlas
 
-## 🛠️ Instalación y Configuración
+## 🛠️ Instalación
 
-### 1. Clonar el repositorio
+### 1. Instalar dependencias
+
 ```bash
-git clone <tu-repositorio>
-cd gymapp
-```
-
-### 2. Instalar dependencias
-```bash
-# Frontend
+# Frontend (raíz del proyecto)
 npm install
 
 # Backend
@@ -40,179 +46,110 @@ npm install
 cd ..
 ```
 
-### 3. Configurar variables de entorno
+### 2. Variables de entorno
 
-**Frontend** (crear `.env` en la raíz):
+**Frontend**: `.env.production` en la raíz (se usa al compilar para producción):
+
 ```env
-REACT_APP_API_URL=https://www.fitcor.fun
+REACT_APP_API_URL=https://api.fitcor.fun
 ```
 
-**Backend** (crear `.env` en `backend/`):
+En desarrollo no hace falta: si la app se sirve en el puerto 3000, apunta automáticamente al backend en el puerto 5000.
+
+**Backend**: `backend/.env`:
+
 ```env
-MONGO_URI=mongodb+srv://usuario:contraseña@fitcor.x6ze1ab.mongodb.net/gymapp?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://<usuario>:<contraseña>@<cluster>.mongodb.net/fitcor?retryWrites=true&w=majority
+JWT_SECRET=<secreto_largo_y_aleatorio>
+PORT=5000
 NODE_ENV=development
-JWT_SECRET=tu_jwt_secret_super_seguro
-FRONTEND_URL=http://localhost:3000
 ```
 
-### 4. Configurar MongoDB Atlas
-- Crear cluster en [MongoDB Atlas](https://cloud.mongodb.com)
-- Configurar Network Access (agregar `0.0.0.0/0` para desarrollo)
-- Crear usuario de base de datos
-- Obtener cadena de conexión
+### 3. MongoDB Atlas
 
-## 🚀 Comandos Disponibles
+- Crear un cluster en [MongoDB Atlas](https://cloud.mongodb.com)
+- En *Network Access*, permitir la IP desde la que se conecta el backend
+- Crear un usuario de base de datos y copiar la cadena de conexión en `MONGO_URI`
 
-### Desarrollo
+## 💻 Comandos
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Inicia backend y frontend a la vez (libera antes los puertos 3000 y 5000) |
+| `npm run dev:concurrent` | Inicia ambos con `concurrently` |
+| `npm run dev:full` | Inicia ambos, con el backend en `nodemon` (se recarga al guardar) |
+| `npm run frontend` | Solo el frontend (http://localhost:3000) |
+| `npm run backend` | Solo el backend (http://localhost:5000) |
+| `npm run backend:dev` | Solo el backend, con `nodemon` |
+| `npm run build` | Compila el frontend para producción en `build/` |
+| `npm test` | Ejecuta los tests |
+
+Scripts de utilidad del backend:
+
 ```bash
-# Iniciar ambos servicios automáticamente
-npm run dev
-
-# Solo frontend
-npm run frontend
-
-# Solo backend
-npm run backend
-
-# Backend con nodemon (auto-reload)
-npm run backend:dev
+node backend/scripts/seed-test-users.js   # crea/actualiza los 3 usuarios de prueba
+node backend/scripts/export-db.js         # exporta la base de datos a mongo/
 ```
 
-### Producción
-```bash
-# Crear build de producción
-npm run build
+## 🔌 API
 
-# Preparar archivos para Hostinger
-npm run deploy:prepare
-```
+Las rutas de rutinas requieren el token JWT en la cabecera `x-auth-token`.
 
-### Testing
-```bash
-# Ejecutar tests
-npm test
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/api/auth/register` | Registra un usuario y devuelve un token |
+| POST | `/api/auth/login` | Inicia sesión y devuelve un token |
+| GET | `/api/routines` | Lista las rutinas del usuario (filtro opcional `?name=`) |
+| POST | `/api/routines` | Crea una rutina |
+| PUT | `/api/routines/:id` | Actualiza una rutina |
+| DELETE | `/api/routines/:id` | Borra una rutina |
 
-# Build con análisis
-npm run build
-```
-
-## 🌐 URLs de Desarrollo
-
-- **Frontend**: http://localhost:3000
-- **Backend**: http://localhost:5000
-- **API Docs**: http://localhost:5000/api
-
-## 📱 Funcionalidades
-
-### Frontend
-- 🏠 **Inicio**: Dashboard principal con estadísticas
-- 👤 **Perfil**: Gestión de usuario y configuración
-- 💪 **Entrenamiento**: Rutinas y ejercicios
-- 📊 **Progreso**: Seguimiento de objetivos
-- 🏢 **Clubs**: Información de gimnasios
-- ⏱️ **Temporizador**: Cronómetro para entrenamientos
-
-### Backend
-- 🔐 **Autenticación**: Login/registro con JWT
-- 📝 **Rutinas**: CRUD de rutinas de ejercicio
-- 👥 **Usuarios**: Gestión de perfiles
-- 🛡️ **Middleware**: Validación y seguridad
-
-## 🏗️ Estructura del Proyecto
+## 🏗️ Estructura del proyecto
 
 ```
-gymapp/
-├── src/                    # Frontend React
-│   ├── components/         # Componentes reutilizables
-│   ├── paginas/           # Páginas principales
-│   ├── api/               # Configuración de API
-│   ├── utils/             # Utilidades
-│   └── img/               # Imágenes
-├── backend/               # Backend Node.js
-│   ├── routes/            # Rutas de API
-│   ├── models/            # Modelos de MongoDB
-│   ├── middleware/        # Middleware personalizado
-│   └── server.js          # Servidor principal
-├── public/                # Archivos estáticos
-└── docs/                  # Documentación
+fitcor/
+├── src/                      # Frontend React (imports absolutos desde src/, ver jsconfig.json)
+│   ├── api/                  # Cliente HTTP (apiFetch)
+│   ├── components/           # Componentes reutilizables
+│   │   └── css/              # Estilos de los componentes
+│   ├── context/              # Contexto de autenticación
+│   ├── data/                 # Datos estáticos (ejercicios)
+│   ├── hooks/                # Hooks personalizados
+│   ├── img/                  # Imágenes
+│   ├── paginas/              # Páginas de la aplicación
+│   │   └── css/              # Estilos de las páginas
+│   └── utils/                # Utilidades (logger)
+├── backend/                  # API Express
+│   ├── controllers/          # Lógica de cada endpoint
+│   ├── middleware/           # Verificación del token JWT
+│   ├── models/               # Esquemas de Mongoose
+│   ├── routes/               # Definición de rutas
+│   ├── scripts/              # Usuarios de prueba y exportación de la BD
+│   ├── utils/                # Transacciones de MongoDB (withTransaction)
+│   └── server.js             # Punto de entrada
+├── docs/                     # Documentación (despliegue)
+├── mongo/                    # Copia de la base de datos en JSON
+└── public/                   # Archivos estáticos base
 ```
 
-## 🚀 Despliegue en Hostinger
+## 🌐 Despliegue
 
-### 1. Preparar archivos
-```bash
-npm run deploy:prepare
-```
+La aplicación está desplegada en un VPS con nginx y pm2. El proceso completo (despliegue atómico del frontend, actualización del backend, verificación y problemas conocidos) está en **[docs/despliegue.md](docs/despliegue.md)**.
 
-### 2. Configurar en Hostinger
-- Habilitar Node.js en el panel
-- Subir archivos según `HOSTINGER-GUIDE.md`
-- Configurar variables de entorno
-- Instalar dependencias del backend
+## 🔧 Tecnologías
 
-### 3. URLs de producción
-- **Frontend**: `https://tu-dominio.com`
-- **Backend**: `https://tu-dominio.com/backend`
+**Frontend**: React 19, React Router, React Toastify, React Leaflet, qrcode.react, PropTypes
 
-## 🔧 Tecnologías Utilizadas
+**Backend**: Node.js, Express, Mongoose, JSON Web Token, bcryptjs, Helmet, Morgan, CORS
 
-### Frontend
-- **React 19** - Framework principal
-- **React Router** - Navegación
-- **React Toastify** - Notificaciones
-- **PropTypes** - Validación de props
-- **Lazy Loading** - Carga diferida
-
-### Backend
-- **Node.js** - Runtime
-- **Express** - Framework web
-- **MongoDB** - Base de datos
-- **Mongoose** - ODM
-- **JWT** - Autenticación
-- **CORS** - Cross-origin requests
-
-## 📚 Documentación Adicional
-
-- [Guía de Desarrollo](README-DEV.md)
-- [Guía de Despliegue](HOSTINGER-GUIDE.md)
-- [Configuración de MongoDB](HOSTINGER-DEPLOY.md)
-
-## 🐛 Solución de Problemas
+## 🐛 Solución de problemas
 
 ### Error de conexión a MongoDB
-1. Verificar cadena de conexión
-2. Comprobar IP en whitelist
-3. Revisar credenciales de usuario
+1. Verificar la cadena `MONGO_URI` (usuario, contraseña y nombre de la base de datos)
+2. Comprobar que la IP está permitida en *Network Access* de Atlas
 
-### Error 502/503 en producción
-1. Verificar que Node.js esté habilitado
-2. Comprobar variables de entorno
-3. Revisar logs en el panel de Hostinger
+### Error de CORS
+El origen debe estar en la lista `allowedOrigins` de `backend/server.js`.
 
-### CORS Error
-1. Verificar configuración de CORS
-2. Comprobar URLs en variables de entorno
-3. Asegurar uso de HTTPS en producción
-
-## 🤝 Contribución
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
-
-## 📞 Soporte
-
-Si tienes problemas o preguntas:
-1. Revisa la documentación
-2. Busca en los issues existentes
-3. Crea un nuevo issue con detalles del problema
-
----
-
-**¡Disfruta entrenando! 💪**
+### Errores en producción
+Ver la sección *Problemas conocidos* de [docs/despliegue.md](docs/despliegue.md).
