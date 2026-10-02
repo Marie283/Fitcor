@@ -99,10 +99,25 @@ Las rutas de rutinas requieren el token JWT en la cabecera `x-auth-token`.
 |---|---|---|
 | POST | `/api/auth/register` | Registra un usuario y devuelve un token |
 | POST | `/api/auth/login` | Inicia sesión y devuelve un token |
-| GET | `/api/routines` | Lista las rutinas del usuario (filtro opcional `?name=`) |
+| GET | `/api/routines` | Lista las rutinas del usuario (admite filtros, ver abajo) |
 | POST | `/api/routines` | Crea una rutina |
 | PUT | `/api/routines/:id` | Actualiza una rutina |
+| PATCH | `/api/routines/:id` | Actualiza solo los campos enviados |
 | DELETE | `/api/routines/:id` | Borra una rutina |
+
+### Filtros del listado de rutinas
+
+Se pueden combinar entre sí y se resuelven con operadores de MongoDB:
+
+| Query param | Ejemplo | Operador |
+|---|---|---|
+| `name` | `?name=core` | `$regex` (coincidencia parcial, sin distinguir mayúsculas) |
+| `ejercicios` | `?ejercicios=Sentadilla,Plancha` | `$in` |
+| `minEjercicios` | `?minEjercicios=3` | `$gte` sobre `$size` |
+| `desde` / `hasta` | `?desde=2026-01-01&hasta=2026-12-31` | `$gte` y `$lte` sobre `createdAt` |
+
+En [backend/api.http](backend/api.http) están todas las peticiones listas para lanzarlas
+desde VS Code con la extensión REST Client.
 
 ## 🏗️ Estructura del proyecto
 
