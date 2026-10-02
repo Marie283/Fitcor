@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import 'paginas/css/progreso-datos.css';
 
 const mainTabs = ['Mis datos', 'Entrenamientos', 'Visitas', 'Insignias'];
@@ -213,11 +214,19 @@ function ProgresoDatos({ activeTab = 'Mis datos', onTabChange }) {
         </div>
         <div className="progreso-stat-chart-wrap">
           <svg width="100%" height="32" viewBox="0 0 120 32">
-            {/* index como key: barras decorativas estáticas de un gráfico de
-                ejemplo (nunca se reordenan/insertan/eliminan) sin ningún id
-                propio; los valores de altura tampoco son únicos por diseño. */}
-            {[8, 12, 10, 14, 9, 13, 11].map((h, i) => (
-              <rect key={i} x={5 + i * 16} y={32 - h * 2} width="10" height={h * 2} rx="4" fill="#4de3d1" />
+            {/* Barras del gráfico de calorías (datos de ejemplo). Cada barra lleva su
+                propio id para no usar el índice como key; el índice solo sirve para
+                calcular la posición horizontal. */}
+            {[
+              { id: 'cal-lun', alto: 8 },
+              { id: 'cal-mar', alto: 12 },
+              { id: 'cal-mie', alto: 10 },
+              { id: 'cal-jue', alto: 14 },
+              { id: 'cal-vie', alto: 9 },
+              { id: 'cal-sab', alto: 13 },
+              { id: 'cal-dom', alto: 11 },
+            ].map((barra, i) => (
+              <rect key={barra.id} x={5 + i * 16} y={32 - barra.alto * 2} width="10" height={barra.alto * 2} rx="4" fill="#4de3d1" />
             ))}
           </svg>
         </div>
@@ -231,10 +240,17 @@ function ProgresoDatos({ activeTab = 'Mis datos', onTabChange }) {
         </div>
         <div className="progreso-stat-chart-wrap progreso-stat-chart-wrap--ultimo">
           <svg width="100%" height="32" viewBox="0 0 120 32">
-            {/* index como key: mismo caso que el gráfico de Calorías arriba,
-                barras decorativas estáticas sin id propio. */}
-            {[8, 12, 10, 14, 9, 13, 11].map((h, i) => (
-              <rect key={i} x={5 + i * 16} y={32 - h * 2} width="10" height={h * 2} rx="4" fill="#4de3d1" />
+            {/* Mismo gráfico para los pasos diarios, con sus propios identificadores */}
+            {[
+              { id: 'pasos-lun', alto: 8 },
+              { id: 'pasos-mar', alto: 12 },
+              { id: 'pasos-mie', alto: 10 },
+              { id: 'pasos-jue', alto: 14 },
+              { id: 'pasos-vie', alto: 9 },
+              { id: 'pasos-sab', alto: 13 },
+              { id: 'pasos-dom', alto: 11 },
+            ].map((barra, i) => (
+              <rect key={barra.id} x={5 + i * 16} y={32 - barra.alto * 2} width="10" height={barra.alto * 2} rx="4" fill="#4de3d1" />
             ))}
           </svg>
         </div>
@@ -375,5 +391,11 @@ function ProgresoDatos({ activeTab = 'Mis datos', onTabChange }) {
     </div>
   );
 }
+
+// Validación de las props que recibe ProgresoDatos
+ProgresoDatos.propTypes = {
+  activeTab: PropTypes.string,
+  onTabChange: PropTypes.func,
+};
 
 export default ProgresoDatos;

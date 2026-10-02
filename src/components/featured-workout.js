@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import 'components/css/featured-workout.css';
 import gimnasioImg from 'img/gimnasiomaquinas.jpg';
 
@@ -21,5 +22,10 @@ function FeaturedWorkout({ onVerTodo }) {
     </div>
   );
 }
+
+// Validación de las props que recibe FeaturedWorkout
+FeaturedWorkout.propTypes = {
+  onVerTodo: PropTypes.func,
+};
 
 export default FeaturedWorkout; 

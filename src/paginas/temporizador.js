@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import 'paginas/css/temporizador.css';
 
 // Rellena con un cero a la izquierda los números menores de 10 (para mostrar "0:07" en vez de "0:7")
@@ -288,5 +289,20 @@ function Temporizador({ config, setConfig, onBack }) {
     </div>
   );
 }
+
+// Validación de las props que recibe CircularProgress
+CircularProgress.propTypes = {
+  percent: PropTypes.number.isRequired,
+  color: PropTypes.string,
+  size: PropTypes.number,
+  stroke: PropTypes.number,
+};
+
+// Validación de las props que recibe Temporizador
+Temporizador.propTypes = {
+  config: PropTypes.shape({ esfuerzo: PropTypes.number, descanso: PropTypes.number, ejercicios: PropTypes.number, rondas: PropTypes.number, reposo: PropTypes.number, sonido: PropTypes.bool }).isRequired,
+  setConfig: PropTypes.func.isRequired,
+  onBack: PropTypes.func.isRequired,
+};
 
 export default Temporizador; 

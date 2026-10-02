@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import 'components/css/header.css';
 import AvatarButton from 'components/avatar-button';
 
@@ -15,5 +16,11 @@ function Header({ onAvatarClick, foto }) {
     </header>
   );
 }
+
+// Validación de las props que recibe Header
+Header.propTypes = {
+  onAvatarClick: PropTypes.func,
+  foto: PropTypes.string,
+};
 
 export default Header; 

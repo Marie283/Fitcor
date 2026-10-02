@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import 'components/css/week-visits.css';
 
 // Utilidad para obtener la semana actual (lunes a domingo) según la fecha del sistema
@@ -49,5 +50,10 @@ function WeekVisits({ onVerVisitas }) {
     </div>
   );
 }
+
+// Validación de las props que recibe WeekVisits
+WeekVisits.propTypes = {
+  onVerVisitas: PropTypes.func,
+};
 
 export default WeekVisits; 

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 
 export const AuthContext = createContext(null);
@@ -43,3 +44,8 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+
+// Validación de las props que recibe AuthProvider
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};

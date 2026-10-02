@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import ProgresoVisitas from 'paginas/progreso-visitas';
 import ProgresoEntrenamientos from 'paginas/progreso-entrenamientos';
 import ProgresoDatos from 'paginas/progreso-datos';
@@ -29,5 +30,10 @@ function Progreso({ onGotoEntrenamiento }) {
     </div>
   );
 }
+
+// Validación de las props que recibe Progreso
+Progreso.propTypes = {
+  onGotoEntrenamiento: PropTypes.func,
+};
 
 export default Progreso; 

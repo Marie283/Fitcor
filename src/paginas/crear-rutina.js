@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { apiFetch } from 'api/base';
 import 'components/css/user-profile.css';
 import 'paginas/css/crear-rutina.css';
@@ -9,6 +10,181 @@ import { useRutinas } from 'hooks/useRutinas';
 // Formulario vacío de crear/editar rutina (editandoId null = se está creando una nueva)
 const FORM_VACIO = { nombre: '', ejercicios: [], editandoId: null };
 
+// Los tres componentes siguientes se definen fuera de Rutinas a propósito. Definidos
+// dentro, React los tomaría por un componente distinto en cada render del padre: los
+// desmontaría y los volvería a montar, perdiendo su estado interno. Eso hacía que, al
+// llegar la respuesta de GET /api/routines, se borrasen los ejercicios ya marcados.
+
+// Ficha de un ejercicio: imagen, instrucciones y, si se pasa onAdd, botón para añadirlo
+function DetalleEjercicio({ ejercicio, onClose, onAdd }) {
+  return (
+    <div className="rutinas-modal-overlay rutinas-modal-overlay--ejercicio">
+      <div className="rutinas-modal-ejercicio">
+        <button onClick={onClose} className="rutinas-modal-close-left" aria-label="Volver">
+          <span className="rutinas-arrow-icon">←</span>
+        </button>
+        <img src={ejercicio.imagen} alt={ejercicio.nombre} className="rutinas-modal-img" />
+        <div className="rutinas-modal-body">
+          <div className="rutinas-divider" />
+          <h3 className="rutinas-modal-title">{ejercicio.nombre}</h3>
+          <div className="rutinas-dots">
+            <span className="rutinas-dot-activo" />
+            <span className="rutinas-dot-inactivo" />
+          </div>
+          <div className="rutinas-section-label">INSTRUCCIONES</div>
+          {/* Si el ejercicio no trae instrucciones propias se usa un texto genérico */}
+          <ol className="rutinas-lista-instrucciones">
+            {(instrucciones[ejercicio.nombre] || ejercicio.instrucciones || ['Ejecuta el ejercicio con buena técnica.']).map((ins) => (
+              <li key={ins} className="rutinas-instruccion-item">{ins}</li>
+            ))}
+          </ol>
+          {onAdd && (
+            <button
+              onClick={() => { onAdd([ejercicio.nombre]); onClose(); }}
+              className="rutinas-btn-añadir-detalle"
+            >
+              Añadir ejercicio
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Validación de las props que recibe DetalleEjercicio
+DetalleEjercicio.propTypes = {
+  ejercicio: PropTypes.shape({
+    nombre: PropTypes.string.isRequired,
+    imagen: PropTypes.string,
+    instrucciones: PropTypes.arrayOf(PropTypes.string),
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+  onAdd: PropTypes.func,
+};
+
+// Pantalla de búsqueda y selección de ejercicios. Mantiene su propio estado y solo
+// avisa al padre (onAdd) con la lista final cuando se confirma.
+function AñadirEjercicios({ onBack, onAdd }) {
+  // Estado agrupado: texto de búsqueda, ejercicios marcados y ejercicio abierto en detalle
+  const [pantalla, setPantalla] = useState({ busqueda: '', seleccionados: [], detalle: null });
+  const { busqueda, seleccionados, detalle } = pantalla;
+  const setDetalle = (ej) => setPantalla(prev => ({ ...prev, detalle: ej }));
+  const ejerciciosFiltrados = ejerciciosEjemplo.filter(ej =>
+    ej.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  // Marca o desmarca un ejercicio sin perder el resto de la selección
+  const toggleSeleccion = (nombre) => {
+    setPantalla(prev => ({
+      ...prev,
+      seleccionados: prev.seleccionados.includes(nombre)
+        ? prev.seleccionados.filter(e => e !== nombre)
+        : [...prev.seleccionados, nombre]
+    }));
+  };
+
+  return (
+    <div className="rutinas-page rutinas-page--con-boton-fijo">
+      <div className="rutinas-header-row">
+        <button onClick={onBack} className="rutinas-back-btn">←</button>
+        <h2 className="rutinas-titulo-seccion">Añadir ejercicios</h2>
+      </div>
+      <input
+        type="text"
+        value={busqueda}
+        onChange={e => setPantalla(prev => ({ ...prev, busqueda: e.target.value }))}
+        placeholder="Buscar ejercicios"
+        className="rutinas-input-busqueda"
+      />
+      <div className="rutinas-ordenar-por">Ordenar por</div>
+      <div>
+        {ejerciciosFiltrados.map((ej) => (
+          // Pulsar la fila abre la ficha; el botón de la derecha solo marca o desmarca,
+          // por eso detiene la propagación del click
+          <div key={ej.nombre} onClick={() => setDetalle(ej)} className="rutinas-ejercicio-row">
+            <img src={ej.imagen} alt={ej.nombre} className="rutinas-ejercicio-img" />
+            <div className="rutinas-ejercicio-info">
+              <div className="rutinas-ejercicio-nombre">{ej.nombre}</div>
+              <div className="rutinas-ejercicio-meta">{ej.grupo} · {ej.descripcion}</div>
+            </div>
+            <button
+              onClick={e => { e.stopPropagation(); toggleSeleccion(ej.nombre); }}
+              className="rutinas-btn-check"
+            >
+              {seleccionados.includes(ej.nombre) ? '✔️' : '+'}
+            </button>
+          </div>
+        ))}
+        {/* Espaciador para scroll extra */}
+        <div className="rutinas-spacer" />
+      </div>
+      <button
+        onClick={() => onAdd(seleccionados)}
+        disabled={seleccionados.length === 0}
+        className="rutinas-btn-añadir"
+      >
+        Añadir ejercicios
+      </button>
+      {detalle && <DetalleEjercicio ejercicio={detalle} onClose={() => setDetalle(null)} onAdd={nombres => { onAdd(nombres); setDetalle(null); }} />}
+    </div>
+  );
+}
+
+// Validación de las props que recibe AñadirEjercicios
+AñadirEjercicios.propTypes = {
+  onBack: PropTypes.func.isRequired,
+  onAdd: PropTypes.func.isRequired,
+};
+
+// Modal con el contenido de una rutina guardada. Acepta tanto el formato del backend
+// (name/exercises) como el que se usa en los datos de ejemplo (nombre/ejercicios).
+function DetalleRutina({ rutina, onClose, onVerEjercicio }) {
+  const listaEjercicios = Array.isArray(rutina.exercises)
+    ? rutina.exercises
+    : (Array.isArray(rutina.ejercicios) ? rutina.ejercicios : []);
+
+  return (
+    <div className="rutinas-modal-overlay">
+      <div className="rutinas-modal-rutina">
+        <button onClick={onClose} className="rutinas-modal-close-right">✕</button>
+        <h3 className="rutinas-modal-rutina-titulo">{rutina.name || rutina.nombre}</h3>
+        <div className="rutinas-modal-rutina-count">{listaEjercicios.length} ejercicios</div>
+        <ul className="rutinas-lista-ejercicios">
+          {listaEjercicios.map((ej) => {
+            const nombreEj = ej.name || ej;
+            return (
+              <li key={nombreEj} className="rutinas-ejercicio-item"
+                onClick={() => {
+                  // Se busca la ficha completa del ejercicio; si no está en los datos de
+                  // ejemplo, se muestra al menos su nombre
+                  const datosEjemplo = ejerciciosEjemplo.find(e => e.nombre.toLowerCase() === nombreEj.toLowerCase());
+                  onVerEjercicio(datosEjemplo ? datosEjemplo : { nombre: nombreEj });
+                }}
+              >
+                {nombreEj}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// Validación de las props que recibe DetalleRutina
+DetalleRutina.propTypes = {
+  rutina: PropTypes.shape({
+    name: PropTypes.string,
+    nombre: PropTypes.string,
+    exercises: PropTypes.array,
+    ejercicios: PropTypes.array,
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+  onVerEjercicio: PropTypes.func.isRequired,
+};
+
+// Pantalla de rutinas: crea, lista, edita y borra las plantillas del usuario contra la API
 function Rutinas({ onBack, token }) {
   // Estados agrupados por finalidad:
   // - form: datos de la rutina que se está creando o editando
@@ -113,6 +289,7 @@ function Rutinas({ onBack, token }) {
     setModales(prev => ({ ...prev, confirmarBorrado: true, rutinaABorrar: id }));
   };
 
+  // Borra en el backend la rutina marcada y la quita de la lista local
   const confirmarBorrar = async () => {
     const id = modales.rutinaABorrar;
     if (!id) return;
@@ -145,134 +322,11 @@ function Rutinas({ onBack, token }) {
     mostrarPantallaAñadir(false);
   };
 
-  // Mover DetalleEjercicio aquí, antes de Rutinas
-  const DetalleEjercicio = ({ ejercicio, onClose, onAdd }) => {
-    return (
-      <div className="rutinas-modal-overlay rutinas-modal-overlay--ejercicio">
-        <div className="rutinas-modal-ejercicio">
-          <button onClick={onClose} className="rutinas-modal-close-left" aria-label="Volver">
-            <span className="rutinas-arrow-icon">←</span>
-          </button>
-          <img src={ejercicio.imagen} alt={ejercicio.nombre} className="rutinas-modal-img" />
-          <div className="rutinas-modal-body">
-            <div className="rutinas-divider" />
-            <h3 className="rutinas-modal-title">{ejercicio.nombre}</h3>
-            <div className="rutinas-dots">
-              <span className="rutinas-dot-activo" />
-              <span className="rutinas-dot-inactivo" />
-            </div>
-            <div className="rutinas-section-label">INSTRUCCIONES</div>
-            <ol className="rutinas-lista-instrucciones">
-              {(instrucciones[ejercicio.nombre] || ejercicio.instrucciones || ['Ejecuta el ejercicio con buena técnica.']).map((ins) => (
-                <li key={ins} className="rutinas-instruccion-item">{ins}</li>
-              ))}
-            </ol>
-            {onAdd && (
-              <button
-                onClick={() => { onAdd([ejercicio.nombre]); onClose(); }}
-                className="rutinas-btn-añadir-detalle"
-              >
-                Añadir ejercicio
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Pantalla para añadir ejercicios
-  function AñadirEjercicios({ onBack, onAdd }) {
-    // Estado de esta pantalla agrupado: texto de búsqueda, ejercicios marcados y ejercicio abierto en detalle
-    const [pantalla, setPantalla] = useState({ busqueda: '', seleccionados: [], detalle: null });
-    const { busqueda, seleccionados, detalle } = pantalla;
-    const setDetalle = (ej) => setPantalla(prev => ({ ...prev, detalle: ej }));
-    const ejerciciosFiltrados = ejerciciosEjemplo.filter(ej =>
-      ej.nombre.toLowerCase().includes(busqueda.toLowerCase())
-    );
-    const toggleSeleccion = (nombre) => {
-      setPantalla(prev => ({
-        ...prev,
-        seleccionados: prev.seleccionados.includes(nombre)
-          ? prev.seleccionados.filter(e => e !== nombre)
-          : [...prev.seleccionados, nombre]
-      }));
-    };
-    return (
-      <div className="rutinas-page rutinas-page--con-boton-fijo">
-        <div className="rutinas-header-row">
-          <button onClick={onBack} className="rutinas-back-btn">←</button>
-          <h2 className="rutinas-titulo-seccion">Añadir ejercicios</h2>
-        </div>
-        <input
-          type="text"
-          value={busqueda}
-          onChange={e => setPantalla(prev => ({ ...prev, busqueda: e.target.value }))}
-          placeholder="Buscar ejercicios"
-          className="rutinas-input-busqueda"
-        />
-        <div className="rutinas-ordenar-por">Ordenar por</div>
-        <div>
-          {ejerciciosFiltrados.map((ej) => (
-            <div key={ej.nombre} onClick={() => setDetalle(ej)} className="rutinas-ejercicio-row">
-              <img src={ej.imagen} alt={ej.nombre} className="rutinas-ejercicio-img" />
-              <div className="rutinas-ejercicio-info">
-                <div className="rutinas-ejercicio-nombre">{ej.nombre}</div>
-                <div className="rutinas-ejercicio-meta">{ej.grupo} · {ej.descripcion}</div>
-              </div>
-              <button
-                onClick={e => { e.stopPropagation(); toggleSeleccion(ej.nombre); }}
-                className="rutinas-btn-check"
-              >
-                {seleccionados.includes(ej.nombre) ? '✔️' : '+'}
-              </button>
-            </div>
-          ))}
-          {/* Espaciador para scroll extra */}
-          <div className="rutinas-spacer" />
-        </div>
-        <button
-          onClick={() => onAdd(seleccionados)}
-          disabled={seleccionados.length === 0}
-          className="rutinas-btn-añadir"
-        >
-          Añadir ejercicios
-        </button>
-        {detalle && <DetalleEjercicio ejercicio={detalle} onClose={() => setDetalle(null)} onAdd={nombres => { onAdd(nombres); setDetalle(null); }} />}
-      </div>
-    );
-  }
-
   // --- UI PRINCIPAL ---
+  // La pantalla de añadir ejercicios sustituye a la vista completa mientras está abierta
   if (mostrarAñadir) {
     return <AñadirEjercicios onBack={() => mostrarPantallaAñadir(false)} onAdd={handleAñadirEjercicios} />;
   }
-
-  // Modal de detalles de rutina
-  const DetalleRutina = ({ rutina, onClose }) => (
-    <div className="rutinas-modal-overlay">
-      <div className="rutinas-modal-rutina">
-        <button onClick={onClose} className="rutinas-modal-close-right">✕</button>
-        <h3 className="rutinas-modal-rutina-titulo">{rutina.name || rutina.nombre}</h3>
-        <div className="rutinas-modal-rutina-count">{Array.isArray(rutina.exercises) ? rutina.exercises.length : (Array.isArray(rutina.ejercicios) ? rutina.ejercicios.length : 0)} ejercicios</div>
-        <ul className="rutinas-lista-ejercicios">
-          {(Array.isArray(rutina.exercises) ? rutina.exercises : (Array.isArray(rutina.ejercicios) ? rutina.ejercicios : [])).map((ej) => {
-            const nombreEj = ej.name || ej;
-            return (
-              <li key={nombreEj} className="rutinas-ejercicio-item"
-                onClick={() => {
-                  const datosEjemplo = ejerciciosEjemplo.find(e => e.nombre.toLowerCase() === nombreEj.toLowerCase());
-                  setModales(prev => ({ ...prev, detalleEjercicio: datosEjemplo ? datosEjemplo : { nombre: nombreEj } }));
-                }}
-              >
-                {nombreEj}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </div>
-  );
 
   return (
     <div className="rutinas-page">
@@ -319,6 +373,7 @@ function Rutinas({ onBack, token }) {
             ))}
             <button onClick={() => mostrarPantallaAñadir(true)} className="rutinas-btn-secundario">+ Añadir ejercicios</button>
           </div>
+          {/* El mismo botón guarda o actualiza según se esté editando una rutina o creando una nueva */}
           <button
             onClick={editandoId ? handleActualizar : handleGuardar}
             disabled={!nombre || ejercicios.length === 0}
@@ -342,6 +397,7 @@ function Rutinas({ onBack, token }) {
           {error && <div className="rutinas-error">{error}</div>}
           {rutinas.length === 0 && !loading && !error && <div className="rutinas-vacio-plantillas">Aún no tienes plantillas guardadas</div>}
           {rutinas.map((r) => (
+            // Pulsar la tarjeta abre el detalle; editar y borrar detienen la propagación
             <div key={r._id} onClick={() => setModales(prev => ({ ...prev, rutinaSeleccionada: r }))} className="rutinas-card">
               <div className="rutinas-card-nombre">{r.name}</div>
               <div className="rutinas-card-meta">{r.exercises.length} ejercicios</div>
@@ -359,8 +415,19 @@ function Rutinas({ onBack, token }) {
               </button>
             </div>
           ))}
-          {modales.rutinaSeleccionada && <DetalleRutina rutina={modales.rutinaSeleccionada} onClose={() => setModales(prev => ({ ...prev, rutinaSeleccionada: null }))} />}
-          {modales.detalleEjercicio && <DetalleEjercicio ejercicio={modales.detalleEjercicio} onClose={() => setModales(prev => ({ ...prev, detalleEjercicio: null }))} />}
+          {modales.rutinaSeleccionada && (
+            <DetalleRutina
+              rutina={modales.rutinaSeleccionada}
+              onClose={() => setModales(prev => ({ ...prev, rutinaSeleccionada: null }))}
+              onVerEjercicio={(ej) => setModales(prev => ({ ...prev, detalleEjercicio: ej }))}
+            />
+          )}
+          {modales.detalleEjercicio && (
+            <DetalleEjercicio
+              ejercicio={modales.detalleEjercicio}
+              onClose={() => setModales(prev => ({ ...prev, detalleEjercicio: null }))}
+            />
+          )}
           {/* Espaciador para scroll extra */}
           <div className="rutinas-spacer" />
         </div>
@@ -378,5 +445,11 @@ function Rutinas({ onBack, token }) {
     </div>
   );
 }
+
+// Validación de las props que recibe Rutinas
+Rutinas.propTypes = {
+  onBack: PropTypes.func.isRequired,
+  token: PropTypes.string,
+};
 
 export default Rutinas;

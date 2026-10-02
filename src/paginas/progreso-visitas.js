@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import gimnasioImg from 'img/gimnasio.jpg';
 import 'paginas/css/progreso-tabs.css';
 import 'paginas/css/progreso-visitas.css';
 
+// Historial de visitas de ejemplo. Con datos reales esta lista vendría de la API;
+// aquí sirve para mostrar el diseño de la pantalla.
 const visitasEjemplo = [
   {
     club: 'FITCOR A CORUÑA AVENIDA DE CASTELO',
     fecha: '2025-07-07',
-    hora: 'e9:26:32',
+    hora: '09:26:32',
     img: gimnasioImg
   },
   {
@@ -47,9 +50,15 @@ const visitasEjemplo = [
     img: gimnasioImg
   }
 ].map(v => ({...v, club: v.club.replace(/^GYM-FIT/, 'FITCOR')}));
+// El replace normaliza los nombres antiguos: el gimnasio se llamaba GYM-FIT
+// antes del cambio de marca a FITCOR
 
+// Periodos por los que se puede filtrar el historial
 const subTabs = ['Semana', 'Mes', 'Año'];
 
+// Pestaña "Visitas" de la sección Progreso: resumen de visitas al club e historial.
+// activeTab y onTabChange los controla el padre (progreso.js), que decide qué pestaña
+// se muestra; subTab (Semana/Mes/Año) es propio de esta pantalla.
 function ProgresoVisitas({ onTabChange, activeTab = 'Visitas' }) {
   const [subTab, setSubTab] = useState('Año');
 
@@ -93,6 +102,8 @@ function ProgresoVisitas({ onTabChange, activeTab = 'Visitas' }) {
       {/* Historial */}
       <div className="visitas-historial-header">Tu historial</div>
       <div>
+        {/* key por fecha: cada visita del historial tiene una fecha distinta,
+            así que identifica la fila mejor que el índice */}
         {visitasEjemplo.map((v) => (
           <div key={v.fecha} className="visitas-card">
             <img src={v.img} alt={v.club} className="visitas-card-img" />
@@ -108,5 +119,11 @@ function ProgresoVisitas({ onTabChange, activeTab = 'Visitas' }) {
     </div>
   );
 }
+
+// Validación de las props que recibe ProgresoVisitas
+ProgresoVisitas.propTypes = {
+  onTabChange: PropTypes.func,
+  activeTab: PropTypes.string,
+};
 
 export default ProgresoVisitas;

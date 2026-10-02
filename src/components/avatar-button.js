@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import 'components/css/avatar-button.css';
 
 // Botón redondo de la cabecera que abre la pantalla de perfil (onClick lo controla el padre).
@@ -16,5 +17,11 @@ function AvatarButton({ onClick, foto }) {
     </button>
   );
 }
+
+// Validación de las props que recibe AvatarButton
+AvatarButton.propTypes = {
+  onClick: PropTypes.func,
+  foto: PropTypes.string,
+};
 
 export default AvatarButton; 

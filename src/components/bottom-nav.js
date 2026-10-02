@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import 'components/css/bottom-nav.css';
 
 // Definición de las pestañas de la barra de navegación inferior: id (usado para
@@ -31,5 +32,11 @@ function BottomNav({ tabActiva, setTabActiva }) {
     </nav>
   );
 }
+
+// Validación de las props que recibe BottomNav
+BottomNav.propTypes = {
+  tabActiva: PropTypes.string.isRequired,
+  setTabActiva: PropTypes.func.isRequired,
+};
 
 export default BottomNav; 

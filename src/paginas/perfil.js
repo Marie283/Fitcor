@@ -1,16 +1,27 @@
 import React, { useRef, useState } from 'react';
+import PropTypes from 'prop-types';
 import 'components/css/user-profile.css';
 
+// Pantalla de perfil: foto, datos de socio y accesos a suscripción y pagos.
+// La foto se guarda en el componente padre (props foto/setFoto) para que siga
+// visible en la cabecera al cambiar de pantalla.
 function Perfil({ onBack, foto, setFoto, onLogout }) {
+  // El input de archivo está oculto por CSS: el usuario pulsa el avatar y esta
+  // referencia permite abrirlo sin mostrar el input por defecto del navegador
   const fileInput = useRef();
+  // showModal: si la ventana está abierta · modalTipo: qué muestra ('subscripcion' o 'pagos')
   const [showModal, setShowModal] = useState(false);
   const [modalTipo, setModalTipo] = useState('subscripcion');
+  // Los pagos antiguos empiezan ocultos para no alargar la lista
   const [mostrarPagosAnteriores, setMostrarPagosAnteriores] = useState(false);
 
+  // Pulsar el avatar equivale a pulsar el input de archivo oculto
   const handleFotoClick = () => {
     fileInput.current.click();
   };
 
+  // Convierte la imagen elegida en data URL con FileReader y la guarda en el estado
+  // del padre, así se ve al instante sin subirla a ningún servidor
   const handleFotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -22,13 +33,14 @@ function Perfil({ onBack, foto, setFoto, onLogout }) {
     }
   };
 
-  // Cierra el modal si se hace click fuera del contenido
+  // Cierra el modal solo si el click cae en el fondo, no en su contenido
   const handleModalBgClick = (e) => {
     if (e.target.className === 'modal-bg') setShowModal(false);
   };
 
   return (
     <div className="user-profile">
+      {/* Cabecera: volver, avatar editable con la foto y datos del socio */}
       <div className="profile-header">
         <button className="back-btn" onClick={onBack}>
           <span className="back-arrow">←</span>
@@ -57,6 +69,7 @@ function Perfil({ onBack, foto, setFoto, onLogout }) {
         </div>
         <div className="profile-type">Comfort Member</div>
       </div>
+      {/* Accesos del perfil y cierre de sesión */}
       <div className="profile-options">
         <div className="profile-option" onClick={() => { setShowModal(true); setModalTipo('subscripcion'); }}>
           Suscripción y extras
@@ -83,6 +96,8 @@ function Perfil({ onBack, foto, setFoto, onLogout }) {
         <div className="modal-bg" onClick={handleModalBgClick}>
           <div className="modal-content">
             <button onClick={() => setShowModal(false)} className="profile-modal-close-btn">Cerrar</button>
+            {/* Contenido del modal según la opción elegida: condiciones del contrato,
+                extras contratables y preguntas frecuentes */}
             {modalTipo === 'subscripcion' && (
               <div className="profile-modal-section">
                 <h2 className="profile-modal-title">INSCRIPCIÓN</h2>
@@ -120,6 +135,7 @@ function Perfil({ onBack, foto, setFoto, onLogout }) {
                     <span className="profile-btn-chevron">{'>'}</span>
                   </button>
                 </div>
+                {/* Extras que el socio puede contratar aparte de la cuota */}
                 <div className="profile-section-title">MIS AÑADIDOS</div>
                 <div className="profile-addon-card profile-addon-card--orange">
                   <div className="profile-addon-title">BOLSA DE GIMNASIO</div>
@@ -142,6 +158,7 @@ function Perfil({ onBack, foto, setFoto, onLogout }) {
                 <div className="profile-faq-question">¿Deseo cambiar de tarifa. ¿Cómo hacerlo?</div>
               </div>
             )}
+            {/* Historial de pagos: próximos cargos y transacciones completadas */}
             {modalTipo === 'pagos' && (
               <div className="profile-modal-section">
                 {/* Cabecera naranja */}
@@ -267,5 +284,13 @@ function Perfil({ onBack, foto, setFoto, onLogout }) {
     </div>
   );
 }
+
+// Validación de las props que recibe Perfil
+Perfil.propTypes = {
+  onBack: PropTypes.func.isRequired,
+  foto: PropTypes.string,
+  setFoto: PropTypes.func.isRequired,
+  onLogout: PropTypes.func.isRequired,
+};
 
 export default Perfil;

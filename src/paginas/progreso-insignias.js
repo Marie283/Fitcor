@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import 'paginas/css/progreso-insignias.css';
 
 const mainTabs = ['Mis datos', 'Entrenamientos', 'Visitas', 'Insignias'];
@@ -91,5 +92,11 @@ function ProgresoInsignias({ activeTab = 'Insignias', onTabChange }) {
     </div>
   );
 }
+
+// Validación de las props que recibe ProgresoInsignias
+ProgresoInsignias.propTypes = {
+  activeTab: PropTypes.string,
+  onTabChange: PropTypes.func,
+};
 
 export default ProgresoInsignias;

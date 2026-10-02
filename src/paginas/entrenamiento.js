@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Temporizador from 'paginas/temporizador';
 import 'paginas/css/entrenamiento.css';
 
@@ -77,5 +78,14 @@ function Entrenamiento({ tempoConfig, setTempoConfig, showTempo, setShowTempo, o
     </div>
   );
 }
+
+// Validación de las props que recibe Entrenamiento
+Entrenamiento.propTypes = {
+  tempoConfig: PropTypes.shape({ esfuerzo: PropTypes.number, descanso: PropTypes.number, ejercicios: PropTypes.number, rondas: PropTypes.number, reposo: PropTypes.number, sonido: PropTypes.bool }).isRequired,
+  setTempoConfig: PropTypes.func.isRequired,
+  showTempo: PropTypes.bool,
+  setShowTempo: PropTypes.func.isRequired,
+  onCrearRutina: PropTypes.func.isRequired,
+};
 
 export default Entrenamiento; 

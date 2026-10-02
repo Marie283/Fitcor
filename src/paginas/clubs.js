@@ -6,6 +6,11 @@ import { useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 import 'paginas/css/clubs.css';
 
+// Pantalla de clubes: carrusel de gimnasios favoritos, mapa para añadir más,
+// gráfica de afluencia y listado de servicios. El mapa usa react-leaflet con las
+// teselas gratuitas de OpenStreetMap, que no necesitan clave de API.
+
+// Clubes que el usuario ya tiene como favoritos al abrir la pantalla
 const clubsEjemplo = [
   {
     nombre: 'Calle Serramagna',
@@ -24,6 +29,7 @@ const clubsEjemplo = [
   },
 ];
 
+// Gimnasios que se dibujan como marcadores en el mapa, con sus coordenadas
 const gimnasiosMapa = [
   { nombre: 'FITCOR SEGOVIA AVENIDA DEL OBISPO QUESADA', lat: 40.9481, lng: -4.1184, calle: 'Av. del Obispo Quesada, 12' },
   { nombre: 'FITCOR BURGOS CALLE SERRAMAGNA', lat: 42.3439, lng: -3.6969, calle: 'C. Serramagna, 8' },
@@ -67,6 +73,8 @@ const gimnasiosMapa = [
   { nombre: 'FITCOR Málaga', lat: 36.7213, lng: -4.4214, calle: 'Calle Larios, 5' },
 ];
 
+// Icono propio de los marcadores: al empaquetar el proyecto, Leaflet no encuentra
+// la ruta de su icono por defecto, así que se define uno a mano
 const icon = new L.Icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
   iconSize: [32, 32],
@@ -74,21 +82,29 @@ const icon = new L.Icon({
   popupAnchor: [0, -32],
 });
 
+// Leaflet calcula mal el tamaño del mapa cuando este se monta dentro de un contenedor
+// que aún se está abriendo, y queda gris a medias. invalidateSize() lo recalcula una vez
+// terminada la animación de apertura.
 function ResizeMap() {
   const map = useMap();
   useEffect(() => {
-    setTimeout(() => {
+    const id = setTimeout(() => {
       map.invalidateSize();
     }, 200);
+    // Limpieza: si el componente se desmonta antes de esos 200 ms (el usuario cierra
+    // el mapa enseguida), se cancela el temporizador para no tocar un mapa ya destruido
+    return () => clearTimeout(id);
   }, [map]);
   return null;
 }
 
 function Clubs() {
+  // clubs: lista de favoritos del carrusel · showMap: si el modal del mapa está abierto
   const [clubs, setClubs] = React.useState(clubsEjemplo);
   const [showMap, setShowMap] = React.useState(false);
 
-  // Función para agregar a favoritos
+  // Añade a favoritos un gimnasio elegido en el mapa, comprobando antes que no
+  // esté ya en la lista para no duplicarlo
   const handleAgregarFavorito = (gim) => {
     if (!clubs.some(c => c.nombre === gim.nombre)) {
       setClubs([{ nombre: gim.nombre, ciudad: '', imagen: 'https://images.pexels.com/photos/2261482/pexels-photo-2261482.jpeg?auto=compress&w=400&h=120&fit=crop' }, ...clubs]);
@@ -126,6 +142,8 @@ function Clubs() {
           <div className="clubs-modal-box">
             <button onClick={() => setShowMap(false)} className="clubs-modal-close">✕</button>
             <div className="clubs-map-wrapper">
+              {/* scrollWheelZoom desactivado: dentro de un modal, el zoom con la rueda
+                  impediría hacer scroll en la página */}
               <MapContainer center={[40.4168, -3.7038]} zoom={3} className="clubs-map-container" scrollWheelZoom={false}>
                 <ResizeMap />
                 <TileLayer
@@ -151,6 +169,8 @@ function Clubs() {
       {/* Gráfica de horas populares (estática) */}
       <div className="clubs-hours">
         <div className="clubs-hours-title">Calle Serramagna – Horas más populares del club</div>
+        {/* Gráfica de afluencia hecha con divs: la altura de cada barra se pasa por una
+            variable CSS y el viernes (i === 4) se resalta como día punta */}
         <div className="clubs-bars">
           {/* Datos inventados de afluencia por día (lunes a domingo) */}
           {[
